@@ -1,0 +1,61 @@
+image_id,group,search_term,expected_class,predicted_class,predicted_index,confidence,matches_expected,stratum,exclusion_reason
+zebra_01,easy,zebra,zebra,zebra,340,0.999713,1,confident,
+zebra_02,easy,zebra,zebra,zebra,340,0.999715,1,confident,
+zebra_03,easy,zebra,zebra,zebra,340,0.999735,1,confident,
+zebra_04,easy,zebra,zebra,zebra,340,0.998474,1,confident,
+zebra_05,easy,zebra,zebra,zebra,340,0.99991,1,confident,
+banana_01,easy,banana,banana,banana,954,0.998411,1,confident,
+banana_02,easy,banana,banana,banana,954,0.997024,1,confident,
+banana_03,easy,banana,banana,banana,954,0.265889,1,excluded,confidence falls in neither stratum
+banana_04,easy,banana,banana,horizontal bar,602,0.660499,0,excluded,main subject is a person; ImageNet-1k has no person class so no prediction can refer to it
+banana_05,easy,banana,banana,banana,954,0.999816,1,confident,
+pizza_01,easy,pizza,pizza,pizza,963,0.998911,1,confident,
+pizza_02,easy,pizza,pizza,pizza,963,0.90183,1,confident,
+pizza_03,easy,pizza,pizza,pizza,963,0.358875,1,excluded,confidence falls in neither stratum
+pizza_04,easy,pizza,pizza,pizza,963,0.9944,1,confident,
+pizza_05,easy,pizza,pizza,pizza,963,0.314823,1,excluded,confidence falls in neither stratum
+volcano_01,easy,volcano,volcano,killer whale,148,0.809964,0,excluded,confidence falls in neither stratum
+volcano_02,easy,volcano,volcano,volcano,980,0.999928,1,confident,
+volcano_03,easy,volcano,volcano,volcano,980,0.686404,1,uncertain,
+volcano_04,easy,volcano,volcano,volcano,980,0.999612,1,confident,
+volcano_05,easy,volcano,volcano,volcano,980,0.979418,1,confident,
+golden_retriever_01,medium,golden retriever,golden retriever,golden retriever,207,0.822437,1,excluded,confidence falls in neither stratum
+golden_retriever_02,medium,golden retriever,golden retriever,golden retriever,207,0.994787,1,confident,
+golden_retriever_03,medium,golden retriever,golden retriever,golden retriever,207,0.57368,1,uncertain,
+golden_retriever_04,medium,golden retriever,golden retriever,white wolf,270,0.388444,0,excluded,confidence falls in neither stratum
+golden_retriever_05,medium,golden retriever,golden retriever,Great Pyrenees,257,0.751192,0,excluded,confidence falls in neither stratum
+school_bus_01,medium,school bus,school bus,church,497,0.685544,0,uncertain,
+school_bus_02,medium,school bus,school bus,school bus,779,0.999332,1,confident,
+school_bus_03,medium,school bus,school bus,minibus,654,0.82495,0,excluded,confidence falls in neither stratum
+school_bus_04,medium,school bus,school bus,recreational vehicle,757,0.656744,0,uncertain,
+school_bus_05,medium,school bus,school bus,car wheel,479,0.953704,0,confident,
+teapot_01,medium,teapot,teapot,cup,968,0.214008,0,excluded,confidence falls in neither stratum
+teapot_02,medium,teapot,teapot,vase,883,0.560146,0,uncertain,
+teapot_03,medium,teapot,teapot,teapot,849,0.975982,1,confident,
+teapot_04,medium,teapot,teapot,pencil sharpener,710,0.947827,0,confident,
+teapot_05,medium,teapot,teapot,whistle,902,0.245331,0,excluded,confidence falls in neither stratum
+daisy_01,medium,daisy,daisy,daisy,985,0.989365,1,confident,
+daisy_02,medium,daisy,daisy,daisy,985,0.961878,1,confident,
+daisy_03,medium,daisy,daisy,daisy,985,0.984041,1,confident,
+daisy_04,medium,daisy,daisy,daisy,985,0.972932,1,confident,
+daisy_05,medium,daisy,daisy,daisy,985,0.930103,1,confident,
+siberian_husky_01,hard,Siberian husky,Siberian husky,dogsled,537,0.995687,0,confident,
+siberian_husky_02,hard,Siberian husky,Siberian husky,dogsled,537,0.998605,0,confident,
+siberian_husky_03,hard,Siberian husky,Siberian husky,dogsled,537,0.999387,0,confident,
+siberian_husky_04,hard,Siberian husky,Siberian husky,dogsled,537,0.994844,0,confident,
+siberian_husky_05,hard,Siberian husky,Siberian husky,dogsled,537,0.99839,0,confident,
+eskimo_dog_01,hard,Eskimo dog,Eskimo dog,white wolf,270,0.528047,0,uncertain,
+eskimo_dog_02,hard,Eskimo dog,Eskimo dog,Samoyed,258,0.986511,0,confident,
+eskimo_dog_03,hard,Eskimo dog,Eskimo dog,Pomeranian,259,0.549952,0,uncertain,
+eskimo_dog_04,hard,Eskimo dog,Eskimo dog,Samoyed,258,0.785141,0,excluded,confidence falls in neither stratum
+eskimo_dog_05,hard,Eskimo dog,Eskimo dog,Samoyed,258,0.711825,0,excluded,confidence falls in neither stratum
+tabby_01,hard,tabby cat,tabby,tabby,281,0.458281,1,uncertain,
+tabby_02,hard,tabby cat,tabby,tabby,281,0.491728,1,uncertain,
+tabby_03,hard,tabby cat,tabby,Egyptian cat,285,0.483322,0,uncertain,
+tabby_04,hard,tabby cat,tabby,cougar,286,0.719919,0,excluded,confidence falls in neither stratum
+tabby_05,hard,tabby cat,tabby,tiger cat,282,0.514841,0,uncertain,
+egyptian_cat_01,hard,Egyptian cat,Egyptian cat,snow leopard,289,0.969542,0,confident,
+egyptian_cat_02,hard,Egyptian cat,Egyptian cat,punching bag,747,0.11527,0,excluded,confidence falls in neither stratum
+egyptian_cat_03,hard,Egyptian cat,Egyptian cat,sax,776,0.459703,0,uncertain,
+egyptian_cat_04,hard,Egyptian cat,Egyptian cat,pedestal,708,0.951877,0,confident,
+egyptian_cat_05,hard,Egyptian cat,Egyptian cat,window screen,904,0.078337,0,excluded,confidence falls in neither stratum

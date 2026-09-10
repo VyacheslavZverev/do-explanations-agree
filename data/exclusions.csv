@@ -1,0 +1,2 @@
+image_id,reason
+banana_04,main subject is a person; ImageNet-1k has no person class so no prediction can refer to it

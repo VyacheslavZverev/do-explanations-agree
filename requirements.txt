@@ -1,0 +1,21 @@
+# Direct dependencies, pinned to the versions the reported results were produced with.
+# Python 3.12.10, Windows 11, CPU only.
+#
+# torch/torchvision are CPU builds. Install them from the PyTorch index:
+#   pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
+#
+# requirements-lock.txt holds the full transitive freeze of the same environment.
+
+torch==2.14.0+cpu
+torchvision==0.29.0+cpu
+
+captum==0.9.0          # Integrated Gradients, Grad-CAM (LayerGradCam)
+lime==0.2.0.1          # LIME image explainer
+scikit-image==0.26.0   # superpixel segmentation used by LIME
+scikit-learn==1.9.1    # required by lime
+
+numpy==2.5.2
+scipy==1.18.1          # Spearman rank correlation
+pandas==3.0.5          # results tables
+matplotlib==3.11.1     # figures
+pillow==12.3.0         # image loading

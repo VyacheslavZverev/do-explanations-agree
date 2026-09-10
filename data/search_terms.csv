@@ -1,0 +1,13 @@
+group,search_term,expected_class
+easy,zebra,zebra
+easy,banana,banana
+easy,pizza,pizza
+easy,volcano,volcano
+medium,golden retriever,golden retriever
+medium,school bus,school bus
+medium,teapot,teapot
+medium,daisy,daisy
+hard,Siberian husky,Siberian husky
+hard,Eskimo dog,Eskimo dog
+hard,tabby cat,tabby
+hard,Egyptian cat,Egyptian cat
