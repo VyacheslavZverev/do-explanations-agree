@@ -62,6 +62,28 @@ Kept up to date **during** the work, not written at the end.
 - **SHAP not evaluated.** Excluded for computational cost on convolutional
   networks, so conclusions cover three methods, not the field.
 
+## Choices that change the numbers
+- **Integrated Gradients baseline is black**, following the original paper.
+  Black in pixel space is not a zero tensor: the network is fed normalised
+  values, where zeros are mid-grey. Switching the baseline from black to grey
+  shrank attribution values roughly threefold on the image inspected, so this
+  is a parameter of the method, not a detail.
+- **A black baseline gives dark image regions zero attribution by
+  construction**, because attribution is scaled by the difference from the
+  baseline. Dark parts of a photograph are structurally disadvantaged.
+- **Only the positive part of Integrated Gradients is compared.** Roughly half
+  of all pixels carry negative attribution - evidence against the predicted
+  class - and Grad-CAM cannot express that at all. Discarding it makes the
+  comparison fair but throws away half of what IG computed.
+- **Signed attributions nearly cancel.** On the inspected image the positive
+  values summed to +1303 and the negative to -1289. This follows from the
+  completeness property of IG and means a signed sum cannot serve as a measure
+  of importance.
+- **Grad-CAM is computed at 7x7 and Integrated Gradients at 224x224.** Grad-CAM
+  produces one smooth blob, IG a scatter of points along edges. Some of the
+  disagreement this study measures is a difference in native resolution rather
+  than a difference of opinion about the image.
+
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.
