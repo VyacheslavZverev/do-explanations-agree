@@ -7,11 +7,35 @@ identical is what makes the three methods comparable at all.
 
 import numpy as np
 import torch
+from lime.lime_image import LimeImageExplainer
+from skimage.segmentation import slic
 from captum.attr import IntegratedGradients, LayerAttribution, LayerGradCam
 
 import model
 
 INPUT_SIZE = (224, 224)
+
+# LIME perturbs segments at random. Everything random in this study is pinned to
+# this one seed, and the seed is reported with the results.
+RANDOM_SEED = 0
+
+# Segmentation parameters are parameters of the explanation, not of the model:
+# different segment boundaries produce a different map from the same network.
+# SLIC is used instead of the library default (quickshift) because its segment
+# count is set directly, which keeps the map resolution comparable across images.
+# SLIC itself is deterministic - it grows segments from a regular grid - so the
+# only randomness left in LIME is which segments get switched off.
+SLIC_SEGMENTS = 80
+SLIC_COMPACTNESS = 10.0
+
+# How many perturbed copies of the image the linear model is fitted on.
+LIME_SAMPLES = 1000
+
+# What a switched-off segment is filled with. This is LIME's equivalent of the
+# Integrated Gradients baseline, and lime hides it in a default: passing None
+# fills each segment with its own mean colour. Black is chosen so that both
+# methods measure against the same reference.
+LIME_HIDE_COLOUR = 0.0
 
 
 def grad_cam(net: torch.nn.Module, image: torch.Tensor, target: int) -> np.ndarray:
@@ -78,3 +102,47 @@ def positive_part(attribution: np.ndarray) -> np.ndarray:
     that each method still returns what it actually computed.
     """
     return np.clip(attribution, 0.0, None)
+
+
+def _batch_predictor(net: torch.nn.Module):
+    """Wrap the network so LIME can call it on plain RGB arrays.
+
+    LIME hands over unnormalised images in [0, 1]. The normalisation the weights
+    were trained with has to be applied here - skipping it does not raise an
+    error, it quietly changes the prediction being explained.
+    """
+    transform = model.preprocess()
+    mean = torch.tensor(transform.mean).view(1, -1, 1, 1)
+    std = torch.tensor(transform.std).view(1, -1, 1, 1)
+
+    def predict(images: np.ndarray) -> np.ndarray:
+        batch = torch.from_numpy(images).float().permute(0, 3, 1, 2)
+        with torch.no_grad():
+            return net((batch - mean) / std).softmax(dim=1).numpy()
+
+    return predict
+
+
+def lime_map(net: torch.nn.Module, image: np.ndarray, target: int) -> np.ndarray:
+    """LIME attribution for one image, as a map of per-segment weights.
+
+    `image` is the cropped 224x224 picture in [0, 1] - not the normalised tensor
+    the other two methods take, because LIME perturbs pixels a human would see.
+
+    The result is piecewise constant: every pixel of a segment carries that
+    segment's weight. Its effective resolution is the number of segments, a
+    third geometry alongside Grad-CAM's 7x7 grid and IG's per-pixel values.
+    """
+    explainer = LimeImageExplainer(random_state=RANDOM_SEED)
+    explanation = explainer.explain_instance(
+        image.astype(np.double), _batch_predictor(net), labels=(target,),
+        hide_color=LIME_HIDE_COLOUR,
+        top_labels=None, num_samples=LIME_SAMPLES, random_seed=RANDOM_SEED,
+        segmentation_fn=lambda img: slic(img, n_segments=SLIC_SEGMENTS,
+                                         compactness=SLIC_COMPACTNESS,
+                                         start_label=0))
+
+    weights = np.zeros(INPUT_SIZE, dtype=np.float32)
+    for segment_id, weight in explanation.local_exp[target]:
+        weights[explanation.segments == segment_id] = weight
+    return weights

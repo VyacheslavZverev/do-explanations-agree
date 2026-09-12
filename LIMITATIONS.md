@@ -84,6 +84,19 @@ Kept up to date **during** the work, not written at the end.
   disagreement this study measures is a difference in native resolution rather
   than a difference of opinion about the image.
 
+- **LIME fills a switched-off segment with black**, matching the Integrated
+  Gradients baseline. The library default fills it with the segment mean
+  instead. This is LIME's baseline under another name, and it was a default
+  rather than a stated choice until it was made explicit.
+- **Segmentation is a parameter of the explanation.** SLIC with 80 requested
+  segments produced 56 on the inspected image. Different boundaries give a
+  different map from the same network.
+- **The three methods do not even cover the image comparably.** On the inspected
+  image, after discarding negative values, Grad-CAM assigns non-zero importance
+  to 100%% of pixels, Integrated Gradients to 50%% and LIME to 71%%. Any metric
+  based on a top-10%% threshold is applied to three very different
+  distributions.
+
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.
