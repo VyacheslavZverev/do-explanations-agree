@@ -1,5 +1,7 @@
-# Personal context, never published
+# Working files kept out of the published repository
+CLAUDE.md
 CLAUDE.local.md
+NOTES.md
 
 # Python
 __pycache__/
