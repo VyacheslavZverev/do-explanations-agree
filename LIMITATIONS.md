@@ -100,7 +100,23 @@ Kept up to date **during** the work, not written at the end.
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.
+- **Ties depress the correlation on their own.** LIME is constant within a
+  segment - 41 distinct values across 50,176 pixels on the image inspected -
+  and half of the positive part of Integrated Gradients is exactly zero. Large
+  blocks of equal ranks pull Spearman towards zero whether or not the methods
+  agree, so a low correlation involving LIME is partly an artefact of its
+  resolution.
 - **IoU of the top 10% pixels** depends on an arbitrary threshold. A different
   threshold can change the ordering of the methods.
+- **Chance IoU is 0.053, not 0.** Two independent masks covering 10% of the
+  image each overlap by p/(2-p) = 0.0526 on average; a measured 0.0529 against
+  random noise confirms it. Every reported IoU has to be read against that
+  floor, and a value near it means no agreement rather than little agreement.
+- **The top-10% mask is not exactly 10%.** The threshold keeps tied pixels
+  together, because LIME segments are indivisible by design, so mask sizes vary
+  slightly between methods. Both real sizes are recorded per image.
+- **Attribution maps are not rescaled to a common range.** Spearman compares
+  ranks and the IoU threshold is taken inside each map, so no normalisation is
+  needed. This removes a distortion the study originally expected to carry.
 - Agreement between two explanations is **not** evidence that either is
   faithful to the model.
