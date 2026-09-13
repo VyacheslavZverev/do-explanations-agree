@@ -98,11 +98,19 @@ Kept up to date **during** the work, not written at the end.
   distributions.
 
 ## Interpreting the main result
-- **The two methods that agree share a spatial scale.** Grad-CAM is a smooth
-  blob upsampled from 7x7 and LIME is constant over ~56 large segments, while
-  Integrated Gradients varies pixel by pixel. Their agreement may reflect a
-  shared coarse resolution rather than a shared account of the network, and
-  this study as it stands cannot separate the two explanations.
+- **Resolution explains most of the disagreement, and that was tested.**
+  Averaging the Integrated Gradients map onto Grad-CAM's 7x7 grid raised their
+  mean Spearman from 0.06 to 0.47, on 38 of 44 images. Coarsening random noise
+  did not (0.01), so the jump is not an artefact of the procedure. What the
+  headline table measures is therefore partly the rendering of the maps rather
+  than the methods themselves.
+- **Coarsening inflates per-image variance.** The control rose from SD 0.004 to
+  SD 0.161, and coarsened IG ranges from -0.57 to +0.90 across images. Only the
+  44-image mean is interpretable; single-image coarse correlations are not.
+- **The correction was applied in one direction only.** IG was coarsened to
+  match Grad-CAM; Grad-CAM cannot be refined to match IG, because the detail
+  was never computed. Saying the methods agree "at a common scale" therefore
+  means at the coarser of the two scales, which is a choice.
 - **The two metrics disagree about the effect of confidence.** Going from the
   confident to the uncertain stratum, mean Spearman for Grad-CAM vs LIME falls
   (0.52 to 0.42) while the same pair's IoU above chance rises (0.18 to 0.28).

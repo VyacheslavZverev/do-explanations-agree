@@ -146,3 +146,19 @@ def lime_map(net: torch.nn.Module, image: np.ndarray, target: int) -> np.ndarray
     for segment_id, weight in explanation.local_exp[target]:
         weights[explanation.segments == segment_id] = weight
     return weights
+
+
+def coarsen(attribution: np.ndarray, grid: int = 7) -> np.ndarray:
+    """Rescale a map to Grad-CAM's native grid and stretch it back.
+
+    Grad-CAM is computed on a 7x7 grid and LIME on a few dozen segments, while
+    Integrated Gradients varies pixel by pixel. If the two coarse methods agree
+    only because they are coarse, then coarsening IG the same way should raise
+    its agreement with Grad-CAM. Averaging preserves where the attribution mass
+    sits and discards only the fine structure.
+    """
+    tensor = torch.from_numpy(attribution).float().view(1, 1, *attribution.shape)
+    pooled = torch.nn.functional.adaptive_avg_pool2d(tensor, grid)
+    stretched = torch.nn.functional.interpolate(
+        pooled, INPUT_SIZE, mode="bilinear", align_corners=False)
+    return stretched.squeeze().numpy()

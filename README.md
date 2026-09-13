@@ -7,8 +7,50 @@ describing what the network actually did.
 
 **Hypothesis under test:** the three methods produce consistent explanations.
 
-**Status: in progress.** The pipeline runs end to end on single images; the full
-sample has not been processed yet. No aggregate result is claimed here.
+**Status:** 44 images processed. Results below are preliminary — one
+architecture, one seed, a small sample.
+
+## Result
+
+Measured at the resolution each method natively produces, the hypothesis fails.
+Two of the three methods agree; the third is close to unrelated to both.
+
+| Pair | Spearman | IoU | chance IoU |
+|---|---|---|---|
+| Grad-CAM vs LIME | **0.49** | 0.26 | 0.057 |
+| Grad-CAM vs Integrated Gradients | 0.06 | 0.10 | 0.053 |
+| Integrated Gradients vs LIME | 0.04 | 0.09 | 0.057 |
+
+But the two methods that agree are also the two that are **coarse**: Grad-CAM is
+a 7×7 grid stretched to full size, LIME is constant over ~56 segments, while
+Integrated Gradients varies pixel by pixel. So a competing explanation is that
+the agreement is about spatial scale, not about the network.
+
+That explanation was tested by averaging the Integrated Gradients map onto
+Grad-CAM's 7×7 grid and measuring again:
+
+| Comparison | Spearman |
+|---|---|
+| Grad-CAM vs Integrated Gradients, as computed | 0.06 |
+| Grad-CAM vs Integrated Gradients, coarsened to 7×7 | **0.47** |
+| Grad-CAM vs LIME (for reference) | 0.49 |
+| *control:* Grad-CAM vs random noise | 0.00 |
+| *control:* Grad-CAM vs coarsened random noise | 0.01 |
+
+The correlation rose on 38 of 44 images, by 0.42 on average. Coarsening random
+noise does **not** produce the same effect, so the jump is not an artefact of
+the procedure — though coarsening does inflate the spread of per-image values
+(control SD 0.161 against 0.004), which is why only the 44-image mean is quoted.
+
+**So the disagreement was largely a difference of resolution, not of substance.**
+Compared at a common scale, Integrated Gradients agrees with Grad-CAM about as
+well as LIME does. This is a stronger claim than the raw table above, and a less
+comfortable one: it means a study that had stopped at the first table would have
+reported a real-looking negative result that was mostly an artefact of how the
+maps are rendered.
+
+Six images moved the other way, three of them strongly — `zebra_03` reaches
+−0.57 after coarsening. Agreement is not uniform, and the averages hide that.
 
 ## What is compared
 
