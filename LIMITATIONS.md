@@ -119,6 +119,30 @@ Kept up to date **during** the work, not written at the end.
 - **The uncertain stratum has 12 images.** Differences between strata are
   suggestive at best.
 
+## Exploratory findings, not tested on held-out data
+- **Where the residual disagreement sits.** After coarsening removes the
+  fine-scale difference, what remains correlates with how differently the two
+  methods split their mass between the centre and the border of the frame:
+  Spearman(border gap, coarsened agreement) = -0.58 over 44 images. The gap is
+  a difference in centre-periphery emphasis, not a preference for borders - IG
+  puts 28.6% of its mass in a ring covering 35.4% of the image, and Grad-CAM
+  only 23.7%, so Grad-CAM is the more central of the two.
+- **That analysis is exploratory and partly circular.** The hypothesis was
+  formed by looking at the worst outlier and then tested on the same 44 images,
+  which inflates any significance. It is also not independent of the outcome:
+  two maps that divide their mass differently between centre and border must
+  correlate less. It localises the disagreement rather than explaining it, and
+  `tabby_02` is a clear counterexample.
+- **Per-image agreement is unstable under the baseline choice.** Switching
+  Integrated Gradients from a black to a grey baseline moved single-image
+  agreement with Grad-CAM by up to 0.41 (school_bus_01: 0.90 to 0.49) and in
+  both directions. Only sample means should be quoted.
+- **A tempting explanation that failed.** The zebra outlier looked like an
+  effect of the black baseline, since a zebra is half black stripes and a black
+  baseline suppresses dark pixels. It is not: with a grey baseline the
+  correlation stays negative (-0.44), and attribution correlates with pixel
+  brightness at only 0.11.
+
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.
