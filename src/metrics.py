@@ -44,3 +44,16 @@ def top_iou(first: np.ndarray, second: np.ndarray,
     intersection = np.logical_and(left, right).sum()
     iou = float(intersection / union) if union else float("nan")
     return iou, float(left.mean()), float(right.mean())
+
+
+def chance_iou(share_first: float, share_second: float) -> float:
+    """IoU two independent masks of these sizes would reach by chance.
+
+    The usual floor of 0.053 assumes both masks cover exactly 10% of the image.
+    LIME's do not: a threshold cannot split a segment, so its mask runs to 17%
+    on some images. Comparing pairs against one shared floor would then flatter
+    whichever pair happens to have the larger mask, so each pair gets its own.
+    """
+    overlap = share_first * share_second
+    union = share_first + share_second - overlap
+    return float(overlap / union) if union else float("nan")

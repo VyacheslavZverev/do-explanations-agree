@@ -12,7 +12,7 @@ produced. Library versions are pinned in `requirements.txt` and
 | Python | 3.12.10, virtual environment in `.venv/` |
 | Device | CPU only (`torch==2.14.0+cpu`) |
 | Model | ResNet-18, `ResNet18_Weights.IMAGENET1K_V1` (`resnet18-f37072fd.pth`) |
-| Randomness | none yet; inference is deterministic. A seed will be fixed before LIME. |
+| Randomness | seed 0, used by LIME. Two runs with the same seed are bit-identical; everything else is deterministic. |
 
 ## Runs
 
@@ -22,6 +22,8 @@ produced. Library versions are pinned in `requirements.txt` and
 | 2026-09-10 | `download_images.py` | `data/sources.csv` | ~1 min | `data/images/`, 60 files, 11.1 MB |
 | 2026-09-10 | `download_images.py` (re-run) | same | ~30 s | 0 downloaded, 60 already present - resume path verified |
 | 2026-09-10 | `classify.py` | 60 images | ~20 s | `results/candidates.csv`: confident 32, uncertain 12, excluded 16 |
+| 2026-09-14 | `run_experiment.py` | 44 images | 14.3 min (19.4 s/image) | `results/results_raw.csv`, one row per image |
+| 2026-09-14 | `summarise.py` | 44 rows | <1 s | `results/summary.csv` |
 
 ## Notes
 

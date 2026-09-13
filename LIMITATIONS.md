@@ -97,6 +97,20 @@ Kept up to date **during** the work, not written at the end.
   based on a top-10%% threshold is applied to three very different
   distributions.
 
+## Interpreting the main result
+- **The two methods that agree share a spatial scale.** Grad-CAM is a smooth
+  blob upsampled from 7x7 and LIME is constant over ~56 large segments, while
+  Integrated Gradients varies pixel by pixel. Their agreement may reflect a
+  shared coarse resolution rather than a shared account of the network, and
+  this study as it stands cannot separate the two explanations.
+- **The two metrics disagree about the effect of confidence.** Going from the
+  confident to the uncertain stratum, mean Spearman for Grad-CAM vs LIME falls
+  (0.52 to 0.42) while the same pair's IoU above chance rises (0.18 to 0.28).
+  Any claim about how agreement depends on confidence therefore depends on
+  which metric is quoted.
+- **The uncertain stratum has 12 images.** Differences between strata are
+  suggestive at best.
+
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.
@@ -108,10 +122,16 @@ Kept up to date **during** the work, not written at the end.
   resolution.
 - **IoU of the top 10% pixels** depends on an arbitrary threshold. A different
   threshold can change the ordering of the methods.
-- **Chance IoU is 0.053, not 0.** Two independent masks covering 10% of the
-  image each overlap by p/(2-p) = 0.0526 on average; a measured 0.0529 against
-  random noise confirms it. Every reported IoU has to be read against that
-  floor, and a value near it means no agreement rather than little agreement.
+- **Chance IoU is not 0.** Two independent masks overlap by
+  p1*p2/(p1+p2-p1*p2) on average - 0.053 when both cover 10% of the image; a
+  measured 0.0529 against random noise confirms it. Every reported IoU has to be
+  read against that floor, and a value near it means no agreement rather than
+  little agreement.
+- **The floor differs between pairs.** LIME's mask reaches 17% on some images,
+  because a quantile threshold cannot split a segment, which lifts the chance
+  IoU for any pair involving LIME to about 0.067. Comparing pairs against one
+  shared floor would flatter whichever pair has the larger mask, so the chance
+  value is computed per pair and recorded per image.
 - **The top-10% mask is not exactly 10%.** The threshold keeps tied pixels
   together, because LIME segments are indivisible by design, so mask sizes vary
   slightly between methods. Both real sizes are recorded per image.

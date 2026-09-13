@@ -59,9 +59,15 @@ a map against itself      Spearman  1.000    IoU 1.000
 a map against random noise Spearman -0.001   IoU 0.053
 ```
 
-**Chance IoU is 0.053, not 0.** Two independent masks covering 10 % of an image
-overlap by p/(2−p) = 0.0526 on average. An IoU near 0.053 means *no* agreement,
-not *little* agreement.
+**Chance IoU is not 0.** Two independent masks overlap by
+`p1·p2 / (p1 + p2 − p1·p2)` on average - 0.053 when both cover 10 % of the
+image. An IoU near that floor means *no* agreement, not *little* agreement.
+
+The floor is computed **per pair**, not once. A quantile threshold cannot split
+a LIME segment, so LIME's mask runs to 17 % on some images, which lifts its own
+floor to about 0.067. Using one shared floor would flatter whichever pair has
+the larger mask. Both mask sizes and the pair's chance IoU are recorded for
+every image.
 
 ## Choices that change the numbers
 
