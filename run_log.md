@@ -25,6 +25,7 @@ produced. Library versions are pinned in `requirements.txt` and
 | 2026-09-14 | `run_experiment.py` | 44 images | 14.3 min (19.4 s/image) | `results/results_raw.csv`, one row per image |
 | 2026-09-14 | `summarise.py` | 44 rows | <1 s | `results/summary.csv` |
 | 2026-09-14 | `resolution_control.py` | 44 images | ~3 min | `results/resolution_control.csv` |
+| 2026-09-15 | `figures.py` | results tables | ~40 s | six PNGs at 300 dpi in `figures/ru` and `figures/en` |
 
 ## Notes
 

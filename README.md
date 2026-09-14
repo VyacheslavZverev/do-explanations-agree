@@ -10,6 +10,8 @@ describing what the network actually did.
 **Status:** 44 images processed. Results below are preliminary — one
 architecture, one seed, a small sample.
 
+![The same decision explained three ways](figures/en/fig1_maps.png)
+
 ## Result
 
 Measured at the resolution each method natively produces, the hypothesis fails.
@@ -20,6 +22,8 @@ Two of the three methods agree; the third is close to unrelated to both.
 | Grad-CAM vs LIME | **0.49** | 0.26 | 0.057 |
 | Grad-CAM vs Integrated Gradients | 0.06 | 0.10 | 0.053 |
 | Integrated Gradients vs LIME | 0.04 | 0.09 | 0.057 |
+
+![Agreement by pair](figures/en/fig2_agreement.png)
 
 But the two methods that agree are also the two that are **coarse**: Grad-CAM is
 a 7×7 grid stretched to full size, LIME is constant over ~56 segments, while
@@ -36,6 +40,8 @@ Grad-CAM's 7×7 grid and measuring again:
 | Grad-CAM vs LIME (for reference) | 0.49 |
 | *control:* Grad-CAM vs random noise | 0.00 |
 | *control:* Grad-CAM vs coarsened random noise | 0.01 |
+
+![Agreement before and after coarsening, with the noise control](figures/en/fig3_resolution.png)
 
 The correlation rose on 38 of 44 images, by 0.42 on average. Coarsening random
 noise does **not** produce the same effect, so the jump is not an artefact of
@@ -138,6 +144,10 @@ python -m venv .venv
 .venv/Scripts/python src/fetch_images.py      # build data/sources.csv
 .venv/Scripts/python src/download_images.py   # fetch the images (resumable)
 .venv/Scripts/python src/classify.py          # predictions and strata
+.venv/Scripts/python src/run_experiment.py    # three maps per image (~15 min, resumable)
+.venv/Scripts/python src/summarise.py         # results/summary.csv
+.venv/Scripts/python src/resolution_control.py  # the coarsening test and its control
+.venv/Scripts/python src/figures.py           # figures, both languages
 ```
 
 `requirements.txt` pins direct dependencies; `requirements-lock.txt` is the full
@@ -153,7 +163,15 @@ every run.
 | `src/download_images.py` | fetch and verify the images |
 | `src/classify.py` | predictions, confidence strata, exclusions |
 | `src/attribution.py` | the three attribution methods |
-| `src/metrics.py` | Spearman and top-10 % IoU |
+| `src/metrics.py` | Spearman, top-10 % IoU, and the chance floor |
+| `src/run_experiment.py` | all three maps per image, appended as it goes |
+| `src/summarise.py` | aggregates into `results/summary.csv` |
+| `src/resolution_control.py` | the coarsening test and the noise control |
 | `data/sources.csv` | provenance and licence of every candidate |
 | `results/candidates.csv` | every candidate with its prediction and stratum |
+| `results/results_raw.csv` | one row per analysed image — the appendix table |
+| `results/summary.csv` | means per pair, per stratum |
+| `results/resolution_control.csv` | per-image before/after and the control |
+| `src/figures.py` | the figures, in an English and a Russian version |
+| `figures/en`, `figures/ru` | 300 dpi PNGs, readable in black and white |
 | `LIMITATIONS.md` | what this study does **not** show |
