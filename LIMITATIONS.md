@@ -1,26 +1,39 @@
 # Limitations
 
-Kept up to date **during** the work, not written at the end.
+What this study does **not** show. Kept up to date during the work, not written
+at the end.
+
+- [Scope](#scope)
+- [Data](#data)
+- [Method and parameter choices](#method-and-parameter-choices)
+- [Metrics](#metrics)
+- [Interpreting the results](#interpreting-the-results)
+- [Exploratory findings](#exploratory-findings)
+- [Reproducibility](#reproducibility)
 
 ## Scope
+- **Agreement is not faithfulness.** Two methods highlighting the same pixels
+  is not evidence that either describes what the network actually did. This
+  study measures whether explanations agree with each other, never whether any
+  of them is right.
 - **Single architecture.** All results come from one pretrained network
   (ResNet-18, ImageNet weights). Agreement between explanation methods may be
   architecture-specific and is not shown to generalise.
-- **Small sample.** The number of analysed images is small, so reported
-  correlations carry wide uncertainty.
+- **Small sample.** 44 images: 32 in the confident stratum and 12 in the
+  uncertain one. Reported correlations carry wide uncertainty, and differences
+  between strata are suggestive at best.
 - **Two confidence strata, both arbitrary.** Images are analysed in a confident
   stratum (>=90%) and an uncertain one (40-70%). The second exists because a
   >=90% filter alone keeps only cases the network already finds easy, which
   biases the study towards agreement. Both bounds are chosen, not derived, and
   the 70-90% band is analysed in neither.
-- **The explained class is the predicted one, not the true one.** Where the
-  network is confidently wrong - five husky photographs are classified as
-  `dogsled` at 99.5-99.9% - the explanation targets `dogsled`. This is the
-  intended reading of the hypothesis, but it means the study says nothing about
-  whether explanations track the correct class.
-- **Small strata.** 32 confident and 13 uncertain images. Any difference
-  between the two carries wide uncertainty and should not be read as
-  established.
+- **The explained class is the predicted one, not the searched-for one.** Five
+  photographs found by searching "Siberian husky" are sled races, and the
+  network calls them `dogsled` - correctly. The explanations target `dogsled`.
+  This is the intended reading of the hypothesis, but it means the study says
+  nothing about whether explanations track any externally verified class.
+- **SHAP not evaluated.** Excluded for computational cost on convolutional
+  networks, so conclusions cover three methods, not the field.
 
 ## Data
 - **The network sees a centre crop, not the photograph.** Every image is
@@ -50,22 +63,20 @@ Kept up to date **during** the work, not written at the end.
   colour that was never in the original photograph, and any attribution mass
   falling there is an artefact of that conversion.
 
-## Method
+## Method and parameter choices
 - **Off-the-shelf implementations.** Grad-CAM, Integrated Gradients and LIME are
   used as provided by `captum` / `lime`, not reimplemented. Library defaults
   (baseline, step count, number of perturbed samples, segmentation algorithm)
   materially affect the resulting maps.
-- **Normalisation artefact.** The three methods produce attribution maps on
-  different scales and at different resolutions. Making them comparable requires
-  resizing and normalisation, which is itself a transformation that can create
-  or destroy agreement.
-- **Signed vs unsigned attributions.** Integrated Gradients yields signed
-  values; Grad-CAM is non-negative by construction. Any reconciliation of the
-  two is a modelling choice, not a neutral operation.
-- **SHAP not evaluated.** Excluded for computational cost on convolutional
-  networks, so conclusions cover three methods, not the field.
-
-## Choices that change the numbers
+- **Only the positive part of Integrated Gradients is compared.** Integrated
+  Gradients yields signed values; Grad-CAM is non-negative by construction.
+  Roughly half of all IG pixels carry negative attribution - evidence against
+  the predicted class - which Grad-CAM cannot express at all. Discarding it
+  makes the comparison fair but throws away half of what IG computed.
+- **Signed attributions nearly cancel.** On the inspected image the positive
+  values summed to +1303 and the negative to -1289. This follows from the
+  completeness property of IG and means a signed sum cannot serve as a measure
+  of importance.
 - **Integrated Gradients baseline is black**, following the original paper.
   Black in pixel space is not a zero tensor: the network is fed normalised
   values, where zeros are mid-grey. Switching the baseline from black to grey
@@ -74,19 +85,10 @@ Kept up to date **during** the work, not written at the end.
 - **A black baseline gives dark image regions zero attribution by
   construction**, because attribution is scaled by the difference from the
   baseline. Dark parts of a photograph are structurally disadvantaged.
-- **Only the positive part of Integrated Gradients is compared.** Roughly half
-  of all pixels carry negative attribution - evidence against the predicted
-  class - and Grad-CAM cannot express that at all. Discarding it makes the
-  comparison fair but throws away half of what IG computed.
-- **Signed attributions nearly cancel.** On the inspected image the positive
-  values summed to +1303 and the negative to -1289. This follows from the
-  completeness property of IG and means a signed sum cannot serve as a measure
-  of importance.
-- **Grad-CAM is computed at 7x7 and Integrated Gradients at 224x224.** Grad-CAM
-  produces one smooth blob, IG a scatter of points along edges. Some of the
-  disagreement this study measures is a difference in native resolution rather
-  than a difference of opinion about the image.
-
+- **Per-image agreement is unstable under the baseline choice.** Switching
+  Integrated Gradients from a black to a grey baseline moved single-image
+  agreement with Grad-CAM by up to 0.41 (school_bus_01: 0.90 to 0.49) and in
+  both directions. Only sample means should be quoted.
 - **LIME fills a switched-off segment with black**, matching the Integrated
   Gradients baseline. The library default fills it with the segment mean
   instead. This is LIME's baseline under another name, and it was a default
@@ -94,91 +96,14 @@ Kept up to date **during** the work, not written at the end.
 - **Segmentation is a parameter of the explanation.** SLIC with 80 requested
   segments produced 56 on the inspected image. Different boundaries give a
   different map from the same network.
+- **Grad-CAM is computed at 7x7 and Integrated Gradients at 224x224.** Grad-CAM
+  produces one smooth blob, IG a scatter of points along edges. The main
+  result shows how much of the measured disagreement this accounts for.
 - **The three methods do not even cover the image comparably.** On the inspected
   image, after discarding negative values, Grad-CAM assigns non-zero importance
-  to 100%% of pixels, Integrated Gradients to 50%% and LIME to 71%%. Any metric
-  based on a top-10%% threshold is applied to three very different
+  to 100% of pixels, Integrated Gradients to 50% and LIME to 71%. Any metric
+  based on a top-10% threshold is applied to three very different
   distributions.
-
-## Interpreting the main result
-- **Resolution explains most of the disagreement, and that was tested.**
-  Averaging the Integrated Gradients map onto Grad-CAM's 7x7 grid raised their
-  mean Spearman from 0.06 to 0.47, on 38 of 44 images. Coarsening random noise
-  did not (0.01), so the jump is not an artefact of the procedure. What the
-  headline table measures is therefore partly the rendering of the maps rather
-  than the methods themselves.
-- **Coarsening inflates per-image variance.** The control rose from SD 0.004 to
-  SD 0.161, and coarsened IG ranges from -0.57 to +0.90 across images. Only the
-  44-image mean is interpretable; single-image coarse correlations are not.
-- **The correction was applied in one direction only.** IG was coarsened to
-  match Grad-CAM; Grad-CAM cannot be refined to match IG, because the detail
-  was never computed. Saying the methods agree "at a common scale" therefore
-  means at the coarser of the two scales, which is a choice.
-- **No reliable effect of confidence.** Going from the confident to the
-  uncertain stratum, mean Spearman for Grad-CAM vs LIME falls by 0.10 (95% CI
-  0.01 to 0.19) and IoU above chance rises by 0.10 (CI -0.02 to 0.22). An
-  earlier draft read this as the two metrics contradicting each other. With
-  intervals it is one marginal effect and one null: the Spearman interval
-  clears zero by 0.013, which among eleven intervals computed is not a
-  finding to lean on.
-- **The uncertain stratum has 12 images.** Differences between strata are
-  suggestive at best.
-
-## Exploratory findings, not tested on held-out data
-- **Where the residual disagreement sits.** After coarsening removes the
-  fine-scale difference, what remains correlates with how differently the two
-  methods split their mass between the centre and the border of the frame:
-  Spearman(border gap, coarsened agreement) = -0.58 over 44 images. The gap is
-  a difference in centre-periphery emphasis, not a preference for borders - IG
-  puts 28.6% of its mass in a ring covering 35.4% of the image, and Grad-CAM
-  only 23.7%, so Grad-CAM is the more central of the two.
-- **That analysis is exploratory and partly circular.** The hypothesis was
-  formed by looking at the worst outlier and then tested on the same 44 images,
-  which inflates any significance. It is also not independent of the outcome:
-  two maps that divide their mass differently between centre and border must
-  correlate less. It localises the disagreement rather than explaining it, and
-  `tabby_02` is a clear counterexample.
-- **Per-image agreement is unstable under the baseline choice.** Switching
-  Integrated Gradients from a black to a grey baseline moved single-image
-  agreement with Grad-CAM by up to 0.41 (school_bus_01: 0.90 to 0.49) and in
-  both directions. Only sample means should be quoted.
-- **A tempting explanation that failed.** The zebra outlier looked like an
-  effect of the black baseline, since a zebra is half black stripes and a black
-  baseline suppresses dark pixels. It is not: with a grey baseline the
-  correlation stays negative (-0.44), and attribution correlates with pixel
-  brightness at only 0.11.
-
-- **Equivalence is not shown.** Coarsened Integrated Gradients vs LIME, both
-  against Grad-CAM, differ by -0.02 with a 95% CI of -0.16 to +0.10. "About as
-  well" means no difference was detected; a difference up to about 0.15 in
-  either direction is still compatible with the data.
-- **Intervals do not correct for multiple comparisons.** Eleven bootstrap
-  intervals are reported. Any single one that barely excludes zero should be
-  read with that in mind.
-
-- **The LIME segment-size test supports the resolution account only in part,
-  and the supported part is confounded.** Finer segmentation (160) lowered
-  agreement with Grad-CAM, as predicted; coarser segmentation (40) did not raise
-  it. With the number of perturbation samples fixed at 1000, finer segmentation
-  also means fewer samples per segment weight, so the drop at 160 may reflect
-  estimation noise rather than resolution. Rerunning 160 segments with
-  proportionally more samples would separate the two; it has not been done.
-- **A post-hoc reading of the plateau.** At 80 requested segments SLIC produces
-  about 56, close to Grad-CAM's 49 grid cells, which would explain why coarsening
-  LIME further gains nothing. This was noticed after seeing the result and is a
-  hypothesis, not a finding.
-
-## Reproducibility
-- **The source images are not frozen.** Three weeks after the study, 8 of 60
-  thumbnails came back from Wikimedia with different bytes but identical pixels,
-  and `school_bus_04` came back re-encoded (mean pixel difference 0.11 of 255).
-  `data/image_checksums.csv` records the pixels actually used, and
-  `download_images.py` names any image that no longer matches, but nothing can
-  restore an image once Wikimedia changes it.
-- **Only direct dependencies are pinned in `requirements.txt`.** A clean install
-  resolved newer versions of about a dozen transitive packages. They did not
-  change any result in the reproduction, but `requirements-lock.txt` is the only
-  exact record.
 
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
@@ -189,13 +114,13 @@ Kept up to date **during** the work, not written at the end.
   blocks of equal ranks pull Spearman towards zero whether or not the methods
   agree, so a low correlation involving LIME is partly an artefact of its
   resolution.
-- **Top-10% IoU is fragile for LIME; Spearman is not.** The re-encoding of
-  `school_bus_04` moved LIME's segment weights just enough to put one large
-  segment on the threshold. A quantile threshold keeps a segment whole, so the
-  LIME mask jumped from 10% to 21% of the image and Grad-CAM vs LIME IoU fell
-  from 0.48 to 0.21, while Spearman moved by 0.01. Spearman is the more
-  trustworthy of the two metrics here; single-image IoU values involving LIME
-  should not be read at all.
+- **Top-10% IoU is fragile for LIME; Spearman is not.** A re-encoding of
+  `school_bus_04` by Wikimedia moved LIME's segment weights just enough to put
+  one large segment on the threshold. A quantile threshold keeps a segment
+  whole, so the LIME mask jumped from 10% to 21% of the image and Grad-CAM vs
+  LIME IoU fell from 0.48 to 0.21, while Spearman moved by 0.01. Spearman is
+  the more trustworthy of the two metrics here; single-image IoU values
+  involving LIME should not be read at all.
 - **IoU of the top 10% pixels** depends on an arbitrary threshold. A different
   threshold can change the ordering of the methods.
 - **Chance IoU is not 0.** Two independent masks overlap by
@@ -213,6 +138,79 @@ Kept up to date **during** the work, not written at the end.
   slightly between methods. Both real sizes are recorded per image.
 - **Attribution maps are not rescaled to a common range.** Spearman compares
   ranks and the IoU threshold is taken inside each map, so no normalisation is
-  needed. This removes a distortion the study originally expected to carry.
-- Agreement between two explanations is **not** evidence that either is
-  faithful to the model.
+  needed. Normalisation was originally expected to be a source of distortion;
+  it turned out to be avoidable, and was removed rather than documented.
+
+## Interpreting the results
+- **Resolution explains most of the disagreement, and that was tested.**
+  Averaging the Integrated Gradients map onto Grad-CAM's 7x7 grid raised their
+  mean Spearman from 0.06 to 0.47, on 38 of 44 images. Coarsening random noise
+  did not (0.01), so the jump is not an artefact of the procedure. What the
+  headline table measures is therefore partly the rendering of the maps rather
+  than the methods themselves.
+- **Coarsening inflates per-image variance.** The control rose from SD 0.004 to
+  SD 0.161, and coarsened IG ranges from -0.57 to +0.90 across images. Only the
+  44-image mean is interpretable; single-image coarse correlations are not.
+- **The correction was applied in one direction only.** IG was coarsened to
+  match Grad-CAM; Grad-CAM cannot be refined to match IG, because the detail
+  was never computed. Saying the methods agree "at a common scale" therefore
+  means at the coarser of the two scales, which is a choice.
+- **Equivalence is not shown.** Coarsened Integrated Gradients vs LIME, both
+  against Grad-CAM, differ by -0.02 with a 95% CI of -0.16 to +0.10. "About as
+  well" means no difference was detected; a difference up to about 0.15 in
+  either direction is still compatible with the data.
+- **The LIME segment-size test supports the resolution account only in part,
+  and the supported part is confounded.** The prediction was committed before
+  the run. Finer segmentation (160) lowered agreement with Grad-CAM, as
+  predicted; coarser segmentation (40) did not raise it. With the number of
+  perturbation samples fixed at 1000, finer segmentation also means fewer
+  samples per segment weight, so the drop at 160 may reflect estimation noise
+  rather than resolution. Rerunning 160 segments with proportionally more
+  samples would separate the two; it has not been done.
+- **No reliable effect of confidence.** Going from the confident to the
+  uncertain stratum, mean Spearman for Grad-CAM vs LIME falls by 0.10 (95% CI
+  0.01 to 0.19) and IoU above chance rises by 0.10 (CI -0.02 to 0.22). An
+  earlier draft read this as the two metrics contradicting each other. With
+  intervals it is one marginal effect and one null: the Spearman interval
+  clears zero by 0.013, which among eleven intervals computed is not a
+  finding to lean on.
+- **Intervals do not correct for multiple comparisons.** Eleven bootstrap
+  intervals are reported. Any single one that barely excludes zero should be
+  read with that in mind.
+
+## Exploratory findings
+Not tested on held-out data; each was noticed after seeing results.
+
+- **Where the residual disagreement sits.** After coarsening removes the
+  fine-scale difference, what remains correlates with how differently the two
+  methods split their mass between the centre and the border of the frame:
+  Spearman(border gap, coarsened agreement) = -0.58 over 44 images. The gap is
+  a difference in centre-periphery emphasis, not a preference for borders - IG
+  puts 28.6% of its mass in a ring covering 35.4% of the image, and Grad-CAM
+  only 23.7%, so Grad-CAM is the more central of the two.
+- **That analysis is exploratory and partly circular.** The hypothesis was
+  formed by looking at the worst outlier and then tested on the same 44 images,
+  which inflates any significance. It is also not independent of the outcome:
+  two maps that divide their mass differently between centre and border must
+  correlate less. It localises the disagreement rather than explaining it, and
+  `tabby_02` is a clear counterexample.
+- **A tempting explanation that failed.** The zebra outlier looked like an
+  effect of the black baseline, since a zebra is half black stripes and a black
+  baseline suppresses dark pixels. It is not: with a grey baseline the
+  correlation stays negative (-0.44), and attribution correlates with pixel
+  brightness at only 0.11.
+- **A post-hoc reading of the LIME plateau.** At 80 requested segments SLIC
+  produces about 56, close to Grad-CAM's 49 grid cells, which would explain why
+  coarsening LIME further gains nothing. This is a hypothesis, not a finding.
+
+## Reproducibility
+- **The source images are not frozen.** Three weeks after the study, 8 of 60
+  thumbnails came back from Wikimedia with different bytes but identical pixels,
+  and `school_bus_04` came back re-encoded (mean pixel difference 0.11 of 255).
+  `data/image_checksums.csv` records the pixels actually used, and
+  `download_images.py` names any image that no longer matches, but nothing can
+  restore an image once Wikimedia changes it.
+- **Only direct dependencies are pinned in `requirements.txt`.** A clean install
+  resolved newer versions of about a dozen transitive packages. They did not
+  change any result in the reproduction, but `requirements-lock.txt` is the only
+  exact record.

@@ -1,4 +1,4 @@
-"""Step 3b - download the candidate images listed in data/sources.csv.
+"""Download the images pinned in data/sources.csv and verify their pixels.
 
 Safe to re-run: files already on disk are skipped, so an interrupted run
 continues where it stopped. Every download is opened afterwards to confirm it
@@ -22,7 +22,8 @@ from pathlib import Path
 
 from PIL import Image
 
-USER_AGENT = "xai-agreement-student-project/0.1 (educational, non-commercial)"
+USER_AGENT = ("do-explanations-agree/1.0 "
+              "(https://github.com/VyacheslavZverev/do-explanations-agree)")
 POLITE_DELAY = 0.5
 SOURCES = Path("data/sources.csv")
 IMAGE_DIR = Path("data/images")

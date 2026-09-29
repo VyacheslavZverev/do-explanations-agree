@@ -1,268 +1,82 @@
 # Do explanation methods agree?
 
-Three post-hoc interpretability methods — **Grad-CAM**, **Integrated Gradients**
-and **LIME** — are applied to the same pretrained **ResNet-18**, the same image,
-and the same predicted class. If they disagree, at most one of them can be
-describing what the network actually did.
-
-**Hypothesis under test:** the three methods produce consistent explanations.
-
-**Status:** 44 images processed. Results below are preliminary — one
-architecture, one seed, a small sample.
+When a neural network makes a decision, interpretability methods produce a map
+of which pixels mattered. This project asks whether three widely used methods —
+**Grad-CAM**, **Integrated Gradients** and **LIME** — give the same answer when
+applied to the same network, the same image and the same prediction. If they
+disagree, at most one of them can be describing what the network actually did.
 
 ![The same decision explained three ways](figures/en/fig1_maps.png)
 *Photograph: Achim Lammerts (Syntaxys), [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:2026-03-27_D500-2061_Achim-Lammerts_Bus-595-Rheinzabern.jpg), CC BY-SA 4.0 — resized, centre-cropped, shown alongside attribution maps. This figure is CC BY-SA 4.0.*
 
-## Result
+## Finding
 
-Measured at the resolution each method natively produces, the hypothesis fails.
-Two of the three methods agree moderately; the third agrees with both only
-weakly — about a tenth as much, though reliably above zero.
+On 44 images explained by a pretrained ResNet-18, the methods at first appear
+to disagree: only Grad-CAM and LIME agree, and Integrated Gradients is barely
+related to either. But the two that agree are the two **coarse** methods —
+Grad-CAM works on a 7×7 grid, LIME on about 56 segments — while Integrated
+Gradients varies pixel by pixel. Averaging Integrated Gradients onto Grad-CAM's
+grid makes it agree with Grad-CAM as well as LIME does. The same operation on
+random noise does nothing.
 
-| Pair | Spearman [95% CI] | IoU | chance IoU |
-|---|---|---|---|
-| Grad-CAM vs LIME | **0.49** [0.44, 0.55] | 0.26 | 0.057 |
-| Grad-CAM vs Integrated Gradients | 0.06 [0.04, 0.07] | 0.10 | 0.053 |
-| Integrated Gradients vs LIME | 0.04 [0.02, 0.05] | 0.09 | 0.057 |
-
-Intervals are 95% percentile bootstrap intervals over images, 10,000
-resamples (`src/bootstrap.py` → `results/bootstrap_ci.csv`). They describe
-variability among images like these, not images in general.
-
-![Agreement by pair](figures/en/fig2_agreement.png)
-
-But the two methods that agree are also the two that are **coarse**: Grad-CAM is
-a 7×7 grid stretched to full size, LIME is constant over ~56 segments, while
-Integrated Gradients varies pixel by pixel. So a competing explanation is that
-the agreement is about spatial scale, not about the network.
-
-That explanation was tested by averaging the Integrated Gradients map onto
-Grad-CAM's 7×7 grid and measuring again:
-
-| Comparison | Spearman [95% CI] |
+| Grad-CAM compared with | Spearman [95% CI] |
 |---|---|
-| Grad-CAM vs Integrated Gradients, as computed | 0.06 [0.04, 0.07] |
-| Grad-CAM vs Integrated Gradients, coarsened to 7×7 | **0.47** [0.36, 0.58] |
-| Grad-CAM vs LIME (for reference) | 0.49 [0.44, 0.55] |
-| *control:* Grad-CAM vs random noise | 0.00 |
-| *control:* Grad-CAM vs coarsened random noise | 0.01 |
+| LIME | **0.49** [0.44, 0.55] |
+| Integrated Gradients, as computed | 0.06 [0.04, 0.07] |
+| Integrated Gradients, coarsened to 7×7 | **0.47** [0.36, 0.58] |
+| random noise, coarsened (control) | 0.01 |
 
 ![Agreement before and after coarsening, with the noise control](figures/en/fig3_resolution.png)
 
-The correlation rose on 38 of 44 images, by 0.42 on average (paired 95% CI
-0.31 to 0.50). Coarsening random
-noise does **not** produce the same effect, so the jump is not an artefact of
-the procedure — though coarsening does inflate the spread of per-image values
-(control SD 0.161 against 0.004), which is why only the 44-image mean is quoted.
+**Most of the disagreement is a difference of resolution, not of substance.**
+A study that stopped at the first comparison would have reported a
+real-looking negative result that is largely an artefact of how the maps are
+rendered.
 
-**So the disagreement was largely a difference of resolution, not of substance.**
-Compared at a common scale, Integrated Gradients agrees with Grad-CAM about as
-well as LIME does: the paired difference is −0.02, 95% CI −0.16 to +0.10. That
-interval includes zero, so no difference is detectable at this sample size —
-but a difference of up to about 0.15 either way cannot be ruled out either.
-This is a stronger claim than the raw table above, and a less
-comfortable one: it means a study that had stopped at the first table would have
-reported a real-looking negative result that was mostly an artefact of how the
-maps are rendered.
+## How far to trust it
 
-Six images moved the other way, three of them strongly — `zebra_03` reaches
-−0.57 after coarsening. Agreement is not uniform, and the averages hide that.
+- **Scope:** one network, one seed, 44 images from Wikimedia Commons. Intervals
+  are 95% bootstrap intervals over images.
+- **Checked:** the accuracy of Integrated Gradients' integral; LIME at three
+  segment sizes, with the prediction committed *before* the run (half
+  confirmed); and a full reproduction from a fresh clone, where 43 of 44 image
+  rows matched exactly.
+- **Not shown:** that any method is *right* about the network — agreement is not
+  faithfulness. The full list is in [LIMITATIONS.md](LIMITATIONS.md).
 
-## What is compared
+Every result, method, parameter choice and robustness check is in
+**[docs/DETAILS.md](docs/DETAILS.md)**.
 
-| Method | Looks inside the network? | Native resolution | Signed? |
-|---|---|---|---|
-| Grad-CAM | yes — gradients at the last residual block | 7×7, upsampled to 224×224 | no, ReLU by construction |
-| Integrated Gradients | yes — gradients along a path from a baseline | 224×224 | yes |
-| LIME | no — perturbs segments and fits a linear model | ~56 segments | yes |
+## Run it
 
-The three maps are compared after discarding negative attribution, so that all
-of them answer the same question: *what counts as evidence for this class?*
-
-SHAP is deliberately excluded — its cost on convolutional networks does not fit
-the scope of this study.
-
-## Selecting images
-
-60 candidates are collected from Wikimedia Commons under CC0 / CC BY / CC BY-SA
-/ public-domain licences only. `data/sources.csv` records the licence, author
-and URL of every file; the images themselves are not committed.
-
-Candidates are split by the network's own confidence into two strata:
-
-| Stratum | Confidence | Images | Why |
-|---|---|---|---|
-| `confident` | ≥ 90 % | 32 | the original selection rule |
-| `uncertain` | 40–70 % | 12 | a ≥90 % filter alone keeps only what the network already finds easy, which biases the study towards agreement |
-
-Explanations target **the predicted class, not the intended one**. Five
-photographs found by searching "Siberian husky" are sled races, and the network
-calls them `dogsled` — correctly. The search term is not ground truth.
-
-Images are removed only by a written rule, kept in `data/exclusions.csv` with a
-reason. Rejected images stay in `results/candidates.csv` marked `excluded`.
-
-## Measuring agreement
-
-- **Spearman rank correlation** between two full maps.
-- **IoU of the top 10 % most important pixels**, thresholded inside each map.
-
-Neither metric needs the maps rescaled to a common range, so no normalisation is
-applied — one fewer distortion between the methods and the numbers.
-
-Two sanity checks fix how the numbers should be read:
-
-```
-a map against itself      Spearman  1.000    IoU 1.000
-a map against random noise Spearman -0.001   IoU 0.053
-```
-
-**Chance IoU is not 0.** Two independent masks overlap by
-`p1·p2 / (p1 + p2 − p1·p2)` on average - 0.053 when both cover 10 % of the
-image. An IoU near that floor means *no* agreement, not *little* agreement.
-
-The floor is computed **per pair**, not once. A quantile threshold cannot split
-a LIME segment, so LIME's mask runs to 17 % on some images, which lifts its own
-floor to about 0.067. Using one shared floor would flatter whichever pair has
-the larger mask. Both mask sizes and the pair's chance IoU are recorded for
-every image.
-
-## Choices that change the numbers
-
-Several parameters are decisions rather than properties of the model, and some
-of them are hidden in library defaults. They are stated explicitly in the code
-and listed in [LIMITATIONS.md](LIMITATIONS.md):
-
-- Grad-CAM explains the last residual block; a different layer gives a different map.
-- Integrated Gradients uses a **black** baseline. Black in pixel space is not a
-  zero tensor — the network is fed normalised values, where zeros are mid-grey.
-  Switching black to grey changed attribution magnitudes roughly threefold.
-- LIME fills a switched-off segment with black too. The library default fills it
-  with the segment's mean colour, which is LIME's baseline under another name.
-- LIME segments with SLIC at a stated segment count rather than the default
-  quickshift, so map resolution is comparable across images.
-
-## Robustness checks
-
-- **Integration steps for Integrated Gradients.** IG's completeness property
-  requires its attributions to sum to F(input) − F(baseline); how far the sum
-  misses measures the approximation error. At the 64 steps used, the error is
-  under 5 % on all 44 images (median 1.2 %, max 4.4 %); at 32 steps it exceeds
-  5 % on 12 images. The headline number does not move: Grad-CAM vs coarsened IG
-  is 0.4709 / 0.4708 / 0.4705 at 32 / 64 / 128 steps.
-  `src/check_ig_steps.py` → `results/ig_steps_check.csv`.
-- **LIME segment size — a prediction, half confirmed.** Before the run
-  (commit `8b8f34f`) the resolution account predicted that Grad-CAM vs LIME
-  agreement would order 40 > 80 > 160 segments. SLIC produced 24, 56 and 107
-  segments on average.
-
-  | Segments requested | Spearman | IoU above chance |
-  |---|---|---|
-  | 40 | 0.511 | 0.199 |
-  | 80 (main run) | 0.495 | 0.207 |
-  | 160 | 0.319 | 0.166 |
-
-  Finer than 80 lowers agreement: 80 − 160 is +0.175 [0.128, 0.222] for
-  Spearman and +0.041 [0.004, 0.077] for IoU above chance. Coarser than 80 does
-  not raise it: 40 − 80 is +0.016 [−0.029, 0.062] and −0.008 [−0.055, 0.041].
-  The confirmed half has a competing explanation that was **not** stated in
-  advance: LIME's sample count is fixed at 1000, so doubling the segments halves
-  the data behind each segment's weight and makes the map noisier. The 80-segment
-  rerun reproduces the main run exactly.
-  `src/check_lime_segments.py` → `results/lime_segments_check.csv`.
-- **Reproduction from a fresh clone.** On 2026-09-29 the repository was cloned
-  into an empty folder, installed from `requirements.txt` into a new
-  environment with fresh model weights, and run end to end. 59 of 60 images
-  came back pixel-identical; `school_bus_04` had been re-encoded by Wikimedia.
-  43 of 44 rows of `results_raw.csv` matched in every number; every Spearman
-  figure in this README matched to three decimals; all eleven bootstrap
-  intervals kept the same side of zero.
-- **What the network actually sees.** Every image is centre-cropped to 224×224
-  before any method runs, so all maps describe the crop, not the photograph.
-  A watermark on one image turned out to lie entirely outside the crop.
-
-## Reproducing
-
-Python 3.12, CPU only. Randomness is pinned to one seed; two LIME runs with the
-same seed are bit-identical.
-
-Two things to know first:
-
-- **Start from `download_images.py`, not `fetch_images.py`.** The committed
-  `data/sources.csv` pins the 60 images this study used. `fetch_images.py`
-  rebuilds that list from today's Commons search, which returns different
-  files; it refuses to overwrite the list unless given `--force`.
-- **`results/` already holds this study's outputs.** The long scripts resume by
-  skipping rows that exist, so on a fresh clone they would recompute nothing.
-  Move `results/results_raw.csv` and `results/lime_segments_check.csv` aside to
-  recompute them, then compare.
+Python 3.12, CPU only, about 15 minutes for the main experiment.
 
 ```bash
 python -m venv .venv
-.venv/Scripts/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
-
-.venv/Scripts/python src/download_images.py   # fetch the 60 pinned images (resumable)
-.venv/Scripts/python src/classify.py          # predictions and strata
-.venv/Scripts/python src/run_experiment.py    # three maps per image (~15 min, resumable)
-.venv/Scripts/python src/summarise.py         # results/summary.csv
-.venv/Scripts/python src/resolution_control.py  # the coarsening test and its control
-.venv/Scripts/python src/figures.py           # figures, both languages
-.venv/Scripts/python src/check_ig_steps.py    # IG step-count robustness (~7 min)
-.venv/Scripts/python src/bootstrap.py         # 95% confidence intervals
-.venv/Scripts/python src/check_lime_segments.py  # LIME at 40 / 80 / 160 segments (~40 min)
-```
-
-`requirements.txt` pins direct dependencies only, so pip resolves everything
-else to whatever is current — a clean install three weeks after the study
-pulled newer `networkx`, `contourpy`, `setuptools` and a dozen others.
-`requirements-lock.txt` is the full freeze of the environment the numbers were
-produced in; install from it instead for an exact copy:
-
-```bash
 .venv/Scripts/pip install -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cpu
+.venv/Scripts/python src/download_images.py   # the 60 pinned images, pixel-verified
+.venv/Scripts/python src/classify.py
 ```
 
-`download_images.py` checks every image against `data/image_checksums.csv`, a
-digest of the decoded pixels this study used, and names any image that has
-changed on Wikimedia since. File bytes are not compared: a re-download found
-8 of 60 files changed only in metadata, and one (`school_bus_04`) re-encoded. `run_log.md` records
-every run.
+`results/` already contains this study's outputs, so the long scripts skip work
+that is done. The full pipeline and how to recompute from scratch are in
+[docs/DETAILS.md](docs/DETAILS.md#reproducing).
 
-## Layout
+## Repository
 
-| Path | Contents |
+| | |
 |---|---|
-| `src/model.py` | the network, its preprocessing, its class names |
-| `src/fetch_images.py` | build the candidate list from Wikimedia Commons |
-| `src/download_images.py` | fetch and verify the images |
-| `src/classify.py` | predictions, confidence strata, exclusions |
-| `src/attribution.py` | the three attribution methods |
-| `src/metrics.py` | Spearman, top-10 % IoU, and the chance floor |
-| `src/run_experiment.py` | all three maps per image, appended as it goes |
-| `src/summarise.py` | aggregates into `results/summary.csv` |
-| `src/resolution_control.py` | the coarsening test and the noise control |
-| `src/check_ig_steps.py` | IG accuracy and stability at 32 / 64 / 128 steps |
-| `src/bootstrap.py` | 95% bootstrap intervals, paired where images are shared |
-| `src/check_lime_segments.py` | LIME segment size, with its prediction stated in the docstring |
-| `data/sources.csv` | provenance and licence of every candidate |
-| `results/candidates.csv` | every candidate with its prediction and stratum |
-| `results/results_raw.csv` | one row per analysed image — the appendix table |
-| `results/summary.csv` | means per pair, per stratum |
-| `results/resolution_control.csv` | per-image before/after and the control |
-| `src/figures.py` | the figures, in an English and a Russian version |
-| `figures/en`, `figures/ru` | 300 dpi PNGs, readable in black and white |
-| `LIMITATIONS.md` | what this study does **not** show |
+| `src/` | the pipeline — model, images, three methods, metrics, checks, figures |
+| `data/` | which images were used, their licences, and pixel checksums |
+| `results/` | every number, one CSV per stage |
+| `figures/` | figures in English and Russian, 300 dpi |
+| `docs/DETAILS.md` | the full account |
+| `LIMITATIONS.md` | what this study does not show |
+| `run_log.md` | every run with its date, environment and wall time |
 
 ## Licence
 
-The code, and the charts `fig2_agreement.png` and `fig3_resolution.png`, are
-released under the [MIT License](LICENSE).
-
-`figures/*/fig1_maps.png` contains a photograph by **Achim Lammerts (Syntaxys)**,
-[*2026-03-27 D500-2061 Achim-Lammerts Bus-595-Rheinzabern.jpg*](https://commons.wikimedia.org/wiki/File:2026-03-27_D500-2061_Achim-Lammerts_Bus-595-Rheinzabern.jpg),
-Wikimedia Commons, licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-It has been resized, centre-cropped and placed alongside attribution maps. As an
-adaptation of a ShareAlike work, **that figure is licensed CC BY-SA 4.0, not MIT.**
-
-Source images are not distributed with this repository. Each keeps its own
-licence, recorded with its author and URL in `data/sources.csv`.
+Code and the charts are [MIT](LICENSE). `figures/*/fig1_maps.png` contains a
+CC BY-SA 4.0 photograph by Achim Lammerts (Syntaxys) and is therefore itself
+CC BY-SA 4.0. Source images are not distributed; each keeps its own licence,
+recorded in `data/sources.csv`.

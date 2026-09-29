@@ -1,4 +1,4 @@
-"""Step 4 - classify every candidate and apply the confidence filter.
+"""Classify every candidate and sort it into a confidence stratum.
 
 Writes results/candidates.csv: one row per downloaded image, including the ones
 that fail the filter. Rejected images are kept in the record on purpose - the

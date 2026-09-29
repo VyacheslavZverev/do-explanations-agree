@@ -1,4 +1,4 @@
-"""Step 3a - build the candidate image list. Downloads no images.
+"""Build the candidate image list from Wikimedia Commons. Downloads no images.
 
 Commons search ranking changes over time, so re-running the query is not
 guaranteed to return the same files. `data/sources.csv`, written here, is what
@@ -23,7 +23,8 @@ import urllib.request
 from pathlib import Path
 
 API = "https://commons.wikimedia.org/w/api.php"
-USER_AGENT = "xai-agreement-student-project/0.1 (educational, non-commercial)"
+USER_AGENT = ("do-explanations-agree/1.0 "
+              "(https://github.com/VyacheslavZverev/do-explanations-agree)")
 PER_TERM = 5
 POLITE_DELAY = 2.0   # seconds between API calls; Commons returns HTTP 429 without it
 MAX_RETRIES = 4

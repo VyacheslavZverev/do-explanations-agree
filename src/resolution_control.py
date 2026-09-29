@@ -12,7 +12,6 @@ import csv
 from pathlib import Path
 
 import numpy as np
-from torchvision import transforms
 
 import attribution
 import metrics
