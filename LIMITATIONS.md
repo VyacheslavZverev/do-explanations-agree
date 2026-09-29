@@ -156,6 +156,18 @@ Kept up to date **during** the work, not written at the end.
   intervals are reported. Any single one that barely excludes zero should be
   read with that in mind.
 
+- **The LIME segment-size test supports the resolution account only in part,
+  and the supported part is confounded.** Finer segmentation (160) lowered
+  agreement with Grad-CAM, as predicted; coarser segmentation (40) did not raise
+  it. With the number of perturbation samples fixed at 1000, finer segmentation
+  also means fewer samples per segment weight, so the drop at 160 may reflect
+  estimation noise rather than resolution. Rerunning 160 segments with
+  proportionally more samples would separate the two; it has not been done.
+- **A post-hoc reading of the plateau.** At 80 requested segments SLIC produces
+  about 56, close to Grad-CAM's 49 grid cells, which would explain why coarsening
+  LIME further gains nothing. This was noticed after seeing the result and is a
+  hypothesis, not a finding.
+
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.

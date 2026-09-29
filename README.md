@@ -151,6 +151,25 @@ and listed in [LIMITATIONS.md](LIMITATIONS.md):
   5 % on 12 images. The headline number does not move: Grad-CAM vs coarsened IG
   is 0.4709 / 0.4708 / 0.4705 at 32 / 64 / 128 steps.
   `src/check_ig_steps.py` → `results/ig_steps_check.csv`.
+- **LIME segment size — a prediction, half confirmed.** Before the run
+  (commit `8b8f34f`) the resolution account predicted that Grad-CAM vs LIME
+  agreement would order 40 > 80 > 160 segments. SLIC produced 24, 56 and 107
+  segments on average.
+
+  | Segments requested | Spearman | IoU above chance |
+  |---|---|---|
+  | 40 | 0.511 | 0.199 |
+  | 80 (main run) | 0.495 | 0.207 |
+  | 160 | 0.319 | 0.166 |
+
+  Finer than 80 lowers agreement: 80 − 160 is +0.175 [0.128, 0.222] for
+  Spearman and +0.041 [0.004, 0.077] for IoU above chance. Coarser than 80 does
+  not raise it: 40 − 80 is +0.016 [−0.029, 0.062] and −0.008 [−0.055, 0.041].
+  The confirmed half has a competing explanation that was **not** stated in
+  advance: LIME's sample count is fixed at 1000, so doubling the segments halves
+  the data behind each segment's weight and makes the map noisier. The 80-segment
+  rerun reproduces the main run exactly.
+  `src/check_lime_segments.py` → `results/lime_segments_check.csv`.
 - **What the network actually sees.** Every image is centre-cropped to 224×224
   before any method runs, so all maps describe the crop, not the photograph.
   A watermark on one image turned out to lie entirely outside the crop.
@@ -173,6 +192,7 @@ python -m venv .venv
 .venv/Scripts/python src/figures.py           # figures, both languages
 .venv/Scripts/python src/check_ig_steps.py    # IG step-count robustness (~7 min)
 .venv/Scripts/python src/bootstrap.py         # 95% confidence intervals
+.venv/Scripts/python src/check_lime_segments.py  # LIME at 40 / 80 / 160 segments (~40 min)
 ```
 
 `requirements.txt` pins direct dependencies; `requirements-lock.txt` is the full
@@ -194,6 +214,7 @@ every run.
 | `src/resolution_control.py` | the coarsening test and the noise control |
 | `src/check_ig_steps.py` | IG accuracy and stability at 32 / 64 / 128 steps |
 | `src/bootstrap.py` | 95% bootstrap intervals, paired where images are shared |
+| `src/check_lime_segments.py` | LIME segment size, with its prediction stated in the docstring |
 | `data/sources.csv` | provenance and licence of every candidate |
 | `results/candidates.csv` | every candidate with its prediction and stratum |
 | `results/results_raw.csv` | one row per analysed image — the appendix table |
