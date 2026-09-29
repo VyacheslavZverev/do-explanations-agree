@@ -23,10 +23,13 @@ Kept up to date **during** the work, not written at the end.
   established.
 
 ## Data
-- **A burnt-in watermark in one image.** `eskimo_dog_02` carries a large
-  "Copyright (C) Pets Adviser" caption. High-contrast text is a salient feature
-  and may attract attribution mass; the image is kept, but any attribution
-  landing on the caption is an artefact of the source file.
+- **The network sees a centre crop, not the photograph.** Every image is
+  resized to 256 on the short side and cropped to the central 224x224, so a
+  portrait photograph loses about a third of its height before any method
+  sees it. All three attribution maps describe that crop. A burnt-in
+  "Copyright (C) Pets Adviser" caption on `eskimo_dog_02` was listed here as
+  a possible magnet for attribution; checking showed it sits in rows 920-960
+  of 1000 while the crop keeps rows 172-828, so the network never sees it.
 - **No person class.** ImageNet-1k contains no class for people, so an image
   whose subject is a person forces an arbitrary prediction. Such images are
   excluded by a written rule in `data/exclusions.csv`, not by hand.

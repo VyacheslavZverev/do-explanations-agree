@@ -132,6 +132,19 @@ and listed in [LIMITATIONS.md](LIMITATIONS.md):
 - LIME segments with SLIC at a stated segment count rather than the default
   quickshift, so map resolution is comparable across images.
 
+## Robustness checks
+
+- **Integration steps for Integrated Gradients.** IG's completeness property
+  requires its attributions to sum to F(input) − F(baseline); how far the sum
+  misses measures the approximation error. At the 64 steps used, the error is
+  under 5 % on all 44 images (median 1.2 %, max 4.4 %); at 32 steps it exceeds
+  5 % on 12 images. The headline number does not move: Grad-CAM vs coarsened IG
+  is 0.4709 / 0.4708 / 0.4705 at 32 / 64 / 128 steps.
+  `src/check_ig_steps.py` → `results/ig_steps_check.csv`.
+- **What the network actually sees.** Every image is centre-cropped to 224×224
+  before any method runs, so all maps describe the crop, not the photograph.
+  A watermark on one image turned out to lie entirely outside the crop.
+
 ## Reproducing
 
 Python 3.12, CPU only. Randomness is pinned to one seed; two LIME runs with the
@@ -148,6 +161,7 @@ python -m venv .venv
 .venv/Scripts/python src/summarise.py         # results/summary.csv
 .venv/Scripts/python src/resolution_control.py  # the coarsening test and its control
 .venv/Scripts/python src/figures.py           # figures, both languages
+.venv/Scripts/python src/check_ig_steps.py    # IG step-count robustness (~7 min)
 ```
 
 `requirements.txt` pins direct dependencies; `requirements-lock.txt` is the full
@@ -167,6 +181,7 @@ every run.
 | `src/run_experiment.py` | all three maps per image, appended as it goes |
 | `src/summarise.py` | aggregates into `results/summary.csv` |
 | `src/resolution_control.py` | the coarsening test and the noise control |
+| `src/check_ig_steps.py` | IG accuracy and stability at 32 / 64 / 128 steps |
 | `data/sources.csv` | provenance and licence of every candidate |
 | `results/candidates.csv` | every candidate with its prediction and stratum |
 | `results/results_raw.csv` | one row per analysed image — the appendix table |
