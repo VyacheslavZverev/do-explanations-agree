@@ -170,6 +170,13 @@ and listed in [LIMITATIONS.md](LIMITATIONS.md):
   the data behind each segment's weight and makes the map noisier. The 80-segment
   rerun reproduces the main run exactly.
   `src/check_lime_segments.py` → `results/lime_segments_check.csv`.
+- **Reproduction from a fresh clone.** On 2026-09-29 the repository was cloned
+  into an empty folder, installed from `requirements.txt` into a new
+  environment with fresh model weights, and run end to end. 59 of 60 images
+  came back pixel-identical; `school_bus_04` had been re-encoded by Wikimedia.
+  43 of 44 rows of `results_raw.csv` matched in every number; every Spearman
+  figure in this README matched to three decimals; all eleven bootstrap
+  intervals kept the same side of zero.
 - **What the network actually sees.** Every image is centre-cropped to 224×224
   before any method runs, so all maps describe the crop, not the photograph.
   A watermark on one image turned out to lie entirely outside the crop.
@@ -205,8 +212,20 @@ python -m venv .venv
 .venv/Scripts/python src/check_lime_segments.py  # LIME at 40 / 80 / 160 segments (~40 min)
 ```
 
-`requirements.txt` pins direct dependencies; `requirements-lock.txt` is the full
-freeze of the environment the numbers were produced in. `run_log.md` records
+`requirements.txt` pins direct dependencies only, so pip resolves everything
+else to whatever is current — a clean install three weeks after the study
+pulled newer `networkx`, `contourpy`, `setuptools` and a dozen others.
+`requirements-lock.txt` is the full freeze of the environment the numbers were
+produced in; install from it instead for an exact copy:
+
+```bash
+.venv/Scripts/pip install -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
+`download_images.py` checks every image against `data/image_checksums.csv`, a
+digest of the decoded pixels this study used, and names any image that has
+changed on Wikimedia since. File bytes are not compared: a re-download found
+8 of 60 files changed only in metadata, and one (`school_bus_04`) re-encoded. `run_log.md` records
 every run.
 
 ## Layout

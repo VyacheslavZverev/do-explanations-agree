@@ -168,6 +168,18 @@ Kept up to date **during** the work, not written at the end.
   LIME further gains nothing. This was noticed after seeing the result and is a
   hypothesis, not a finding.
 
+## Reproducibility
+- **The source images are not frozen.** Three weeks after the study, 8 of 60
+  thumbnails came back from Wikimedia with different bytes but identical pixels,
+  and `school_bus_04` came back re-encoded (mean pixel difference 0.11 of 255).
+  `data/image_checksums.csv` records the pixels actually used, and
+  `download_images.py` names any image that no longer matches, but nothing can
+  restore an image once Wikimedia changes it.
+- **Only direct dependencies are pinned in `requirements.txt`.** A clean install
+  resolved newer versions of about a dozen transitive packages. They did not
+  change any result in the reproduction, but `requirements-lock.txt` is the only
+  exact record.
+
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially
   correlated; the effective sample size is far below the pixel count.
@@ -177,6 +189,13 @@ Kept up to date **during** the work, not written at the end.
   blocks of equal ranks pull Spearman towards zero whether or not the methods
   agree, so a low correlation involving LIME is partly an artefact of its
   resolution.
+- **Top-10% IoU is fragile for LIME; Spearman is not.** The re-encoding of
+  `school_bus_04` moved LIME's segment weights just enough to put one large
+  segment on the threshold. A quantile threshold keeps a segment whole, so the
+  LIME mask jumped from 10% to 21% of the image and Grad-CAM vs LIME IoU fell
+  from 0.48 to 0.21, while Spearman moved by 0.01. Spearman is the more
+  trustworthy of the two metrics here; single-image IoU values involving LIME
+  should not be read at all.
 - **IoU of the top 10% pixels** depends on an arbitrary threshold. A different
   threshold can change the ordering of the methods.
 - **Chance IoU is not 0.** Two independent masks overlap by

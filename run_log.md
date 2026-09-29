@@ -29,6 +29,7 @@ produced. Library versions are pinned in `requirements.txt` and
 | 2026-09-29 | `check_ig_steps.py` | 44 images x 3 step counts | ~7 min | `results/ig_steps_check.csv` |
 | 2026-09-29 | `bootstrap.py` | existing result tables, 10,000 resamples, seed 0 | ~2 s | `results/bootstrap_ci.csv` |
 | 2026-09-29 | `check_lime_segments.py` | 44 images x 3 segment counts | ~40 min | `results/lime_segments_check.csv`; 80-segment rows identical to the main run |
+| 2026-09-29 | fresh-clone reproduction | clone + new venv from `requirements.txt` + fresh weights | ~30 min | 43/44 `results_raw` rows identical; all 11 bootstrap intervals same side of zero; `school_bus_04` re-encoded upstream |
 
 ## Notes
 
