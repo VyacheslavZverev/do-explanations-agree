@@ -1,0 +1,12 @@
+quantity,estimate,ci_low,ci_high,n
+grad_cam_lime spearman,0.4947,0.4415,0.5469,44
+grad_cam_lime iou above chance,0.2071,0.1606,0.2563,44
+grad_cam_ig spearman,0.0561,0.0403,0.0718,44
+grad_cam_ig iou above chance,0.0438,0.029,0.0589,44
+ig_lime spearman,0.0372,0.023,0.0518,44
+ig_lime iou above chance,0.0365,0.0224,0.0507,44
+"grad_cam_ig spearman, IG coarsened",0.4708,0.358,0.5773,44
+PAIRED gain from coarsening IG,0.4147,0.3147,0.5047,44
+PAIRED coarsened IG minus LIME (vs Grad-CAM),-0.0239,-0.157,0.1029,44
+STRATA grad_cam_lime spearman: confident minus uncertain,0.1048,0.0128,0.1939,32+12
+STRATA grad_cam_lime iou above chance: confident minus uncertain,-0.102,-0.2231,0.0155,32+12

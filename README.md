@@ -16,13 +16,18 @@ architecture, one seed, a small sample.
 ## Result
 
 Measured at the resolution each method natively produces, the hypothesis fails.
-Two of the three methods agree; the third is close to unrelated to both.
+Two of the three methods agree moderately; the third agrees with both only
+weakly — about a tenth as much, though reliably above zero.
 
-| Pair | Spearman | IoU | chance IoU |
+| Pair | Spearman [95% CI] | IoU | chance IoU |
 |---|---|---|---|
-| Grad-CAM vs LIME | **0.49** | 0.26 | 0.057 |
-| Grad-CAM vs Integrated Gradients | 0.06 | 0.10 | 0.053 |
-| Integrated Gradients vs LIME | 0.04 | 0.09 | 0.057 |
+| Grad-CAM vs LIME | **0.49** [0.44, 0.55] | 0.26 | 0.057 |
+| Grad-CAM vs Integrated Gradients | 0.06 [0.04, 0.07] | 0.10 | 0.053 |
+| Integrated Gradients vs LIME | 0.04 [0.02, 0.05] | 0.09 | 0.057 |
+
+Intervals are 95% percentile bootstrap intervals over images, 10,000
+resamples (`src/bootstrap.py` → `results/bootstrap_ci.csv`). They describe
+variability among images like these, not images in general.
 
 ![Agreement by pair](figures/en/fig2_agreement.png)
 
@@ -34,24 +39,28 @@ the agreement is about spatial scale, not about the network.
 That explanation was tested by averaging the Integrated Gradients map onto
 Grad-CAM's 7×7 grid and measuring again:
 
-| Comparison | Spearman |
+| Comparison | Spearman [95% CI] |
 |---|---|
-| Grad-CAM vs Integrated Gradients, as computed | 0.06 |
-| Grad-CAM vs Integrated Gradients, coarsened to 7×7 | **0.47** |
-| Grad-CAM vs LIME (for reference) | 0.49 |
+| Grad-CAM vs Integrated Gradients, as computed | 0.06 [0.04, 0.07] |
+| Grad-CAM vs Integrated Gradients, coarsened to 7×7 | **0.47** [0.36, 0.58] |
+| Grad-CAM vs LIME (for reference) | 0.49 [0.44, 0.55] |
 | *control:* Grad-CAM vs random noise | 0.00 |
 | *control:* Grad-CAM vs coarsened random noise | 0.01 |
 
 ![Agreement before and after coarsening, with the noise control](figures/en/fig3_resolution.png)
 
-The correlation rose on 38 of 44 images, by 0.42 on average. Coarsening random
+The correlation rose on 38 of 44 images, by 0.42 on average (paired 95% CI
+0.31 to 0.50). Coarsening random
 noise does **not** produce the same effect, so the jump is not an artefact of
 the procedure — though coarsening does inflate the spread of per-image values
 (control SD 0.161 against 0.004), which is why only the 44-image mean is quoted.
 
 **So the disagreement was largely a difference of resolution, not of substance.**
 Compared at a common scale, Integrated Gradients agrees with Grad-CAM about as
-well as LIME does. This is a stronger claim than the raw table above, and a less
+well as LIME does: the paired difference is −0.02, 95% CI −0.16 to +0.10. That
+interval includes zero, so no difference is detectable at this sample size —
+but a difference of up to about 0.15 either way cannot be ruled out either.
+This is a stronger claim than the raw table above, and a less
 comfortable one: it means a study that had stopped at the first table would have
 reported a real-looking negative result that was mostly an artefact of how the
 maps are rendered.
@@ -163,6 +172,7 @@ python -m venv .venv
 .venv/Scripts/python src/resolution_control.py  # the coarsening test and its control
 .venv/Scripts/python src/figures.py           # figures, both languages
 .venv/Scripts/python src/check_ig_steps.py    # IG step-count robustness (~7 min)
+.venv/Scripts/python src/bootstrap.py         # 95% confidence intervals
 ```
 
 `requirements.txt` pins direct dependencies; `requirements-lock.txt` is the full
@@ -183,6 +193,7 @@ every run.
 | `src/summarise.py` | aggregates into `results/summary.csv` |
 | `src/resolution_control.py` | the coarsening test and the noise control |
 | `src/check_ig_steps.py` | IG accuracy and stability at 32 / 64 / 128 steps |
+| `src/bootstrap.py` | 95% bootstrap intervals, paired where images are shared |
 | `data/sources.csv` | provenance and licence of every candidate |
 | `results/candidates.csv` | every candidate with its prediction and stratum |
 | `results/results_raw.csv` | one row per analysed image — the appendix table |

@@ -114,11 +114,13 @@ Kept up to date **during** the work, not written at the end.
   match Grad-CAM; Grad-CAM cannot be refined to match IG, because the detail
   was never computed. Saying the methods agree "at a common scale" therefore
   means at the coarser of the two scales, which is a choice.
-- **The two metrics disagree about the effect of confidence.** Going from the
-  confident to the uncertain stratum, mean Spearman for Grad-CAM vs LIME falls
-  (0.52 to 0.42) while the same pair's IoU above chance rises (0.18 to 0.28).
-  Any claim about how agreement depends on confidence therefore depends on
-  which metric is quoted.
+- **No reliable effect of confidence.** Going from the confident to the
+  uncertain stratum, mean Spearman for Grad-CAM vs LIME falls by 0.10 (95% CI
+  0.01 to 0.19) and IoU above chance rises by 0.10 (CI -0.02 to 0.22). An
+  earlier draft read this as the two metrics contradicting each other. With
+  intervals it is one marginal effect and one null: the Spearman interval
+  clears zero by 0.013, which among eleven intervals computed is not a
+  finding to lean on.
 - **The uncertain stratum has 12 images.** Differences between strata are
   suggestive at best.
 
@@ -145,6 +147,14 @@ Kept up to date **during** the work, not written at the end.
   baseline suppresses dark pixels. It is not: with a grey baseline the
   correlation stays negative (-0.44), and attribution correlates with pixel
   brightness at only 0.11.
+
+- **Equivalence is not shown.** Coarsened Integrated Gradients vs LIME, both
+  against Grad-CAM, differ by -0.02 with a 95% CI of -0.16 to +0.10. "About as
+  well" means no difference was detected; a difference up to about 0.15 in
+  either direction is still compatible with the data.
+- **Intervals do not correct for multiple comparisons.** Eleven bootstrap
+  intervals are reported. Any single one that barely excludes zero should be
+  read with that in mind.
 
 ## Metrics
 - **Spearman correlation** is computed over all pixels, which are spatially

@@ -27,6 +27,7 @@ produced. Library versions are pinned in `requirements.txt` and
 | 2026-09-14 | `resolution_control.py` | 44 images | ~3 min | `results/resolution_control.csv` |
 | 2026-09-15 | `figures.py` | results tables | ~40 s | six PNGs at 300 dpi in `figures/ru` and `figures/en` |
 | 2026-09-29 | `check_ig_steps.py` | 44 images x 3 step counts | ~7 min | `results/ig_steps_check.csv` |
+| 2026-09-29 | `bootstrap.py` | existing result tables, 10,000 resamples, seed 0 | ~2 s | `results/bootstrap_ci.csv` |
 
 ## Notes
 
