@@ -11,6 +11,7 @@ describing what the network actually did.
 architecture, one seed, a small sample.
 
 ![The same decision explained three ways](figures/en/fig1_maps.png)
+*Photograph: Achim Lammerts (Syntaxys), [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:2026-03-27_D500-2061_Achim-Lammerts_Bus-595-Rheinzabern.jpg), CC BY-SA 4.0 — resized, centre-cropped, shown alongside attribution maps. This figure is CC BY-SA 4.0.*
 
 ## Result
 
@@ -190,3 +191,17 @@ every run.
 | `src/figures.py` | the figures, in an English and a Russian version |
 | `figures/en`, `figures/ru` | 300 dpi PNGs, readable in black and white |
 | `LIMITATIONS.md` | what this study does **not** show |
+
+## Licence
+
+The code, and the charts `fig2_agreement.png` and `fig3_resolution.png`, are
+released under the [MIT License](LICENSE).
+
+`figures/*/fig1_maps.png` contains a photograph by **Achim Lammerts (Syntaxys)**,
+[*2026-03-27 D500-2061 Achim-Lammerts Bus-595-Rheinzabern.jpg*](https://commons.wikimedia.org/wiki/File:2026-03-27_D500-2061_Achim-Lammerts_Bus-595-Rheinzabern.jpg),
+Wikimedia Commons, licensed [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+It has been resized, centre-cropped and placed alongside attribution maps. As an
+adaptation of a ShareAlike work, **that figure is licensed CC BY-SA 4.0, not MIT.**
+
+Source images are not distributed with this repository. Each keeps its own
+licence, recorded with its author and URL in `data/sources.csv`.
