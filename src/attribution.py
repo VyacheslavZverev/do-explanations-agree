@@ -123,7 +123,8 @@ def _batch_predictor(net: torch.nn.Module):
     return predict
 
 
-def lime_map(net: torch.nn.Module, image: np.ndarray, target: int) -> np.ndarray:
+def lime_map(net: torch.nn.Module, image: np.ndarray, target: int,
+             segments: int = SLIC_SEGMENTS) -> np.ndarray:
     """LIME attribution for one image, as a map of per-segment weights.
 
     `image` is the cropped 224x224 picture in [0, 1] - not the normalised tensor
@@ -138,7 +139,7 @@ def lime_map(net: torch.nn.Module, image: np.ndarray, target: int) -> np.ndarray
         image.astype(np.double), _batch_predictor(net), labels=(target,),
         hide_color=LIME_HIDE_COLOUR,
         top_labels=None, num_samples=LIME_SAMPLES, random_seed=RANDOM_SEED,
-        segmentation_fn=lambda img: slic(img, n_segments=SLIC_SEGMENTS,
+        segmentation_fn=lambda img: slic(img, n_segments=segments,
                                          compactness=SLIC_COMPACTNESS,
                                          start_label=0))
 
