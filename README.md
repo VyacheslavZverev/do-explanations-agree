@@ -179,12 +179,22 @@ and listed in [LIMITATIONS.md](LIMITATIONS.md):
 Python 3.12, CPU only. Randomness is pinned to one seed; two LIME runs with the
 same seed are bit-identical.
 
+Two things to know first:
+
+- **Start from `download_images.py`, not `fetch_images.py`.** The committed
+  `data/sources.csv` pins the 60 images this study used. `fetch_images.py`
+  rebuilds that list from today's Commons search, which returns different
+  files; it refuses to overwrite the list unless given `--force`.
+- **`results/` already holds this study's outputs.** The long scripts resume by
+  skipping rows that exist, so on a fresh clone they would recompute nothing.
+  Move `results/results_raw.csv` and `results/lime_segments_check.csv` aside to
+  recompute them, then compare.
+
 ```bash
 python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-.venv/Scripts/python src/fetch_images.py      # build data/sources.csv
-.venv/Scripts/python src/download_images.py   # fetch the images (resumable)
+.venv/Scripts/python src/download_images.py   # fetch the 60 pinned images (resumable)
 .venv/Scripts/python src/classify.py          # predictions and strata
 .venv/Scripts/python src/run_experiment.py    # three maps per image (~15 min, resumable)
 .venv/Scripts/python src/summarise.py         # results/summary.csv

@@ -4,12 +4,18 @@ Commons search ranking changes over time, so re-running the query is not
 guaranteed to return the same files. `data/sources.csv`, written here, is what
 makes the study reproducible: it pins the exact files, licences and URLs used.
 That file is committed to the repository; the images themselves are not.
+
+To reproduce the study, do NOT run this script - use the committed
+`data/sources.csv` and start from `download_images.py`. Running this rebuilds
+the list from today's search results, which will select different images. It
+therefore refuses to overwrite an existing list unless called with --force.
 """
 
 import csv
 import html
 import json
 import re
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -88,6 +94,11 @@ def to_row(page: dict, row: dict, index: int) -> dict | None:
 
 
 def main() -> None:
+    if OUT_FILE.exists() and "--force" not in sys.argv:
+        sys.exit(f"{OUT_FILE} already exists and pins the images this study used.\n"
+                 "Re-running the search would select different ones. To reproduce the\n"
+                 "study, skip this step and run download_images.py. To build a new\n"
+                 "candidate list anyway, pass --force.")
     terms = list(csv.DictReader(TERMS_FILE.open(encoding="utf-8")))
     rows, skipped = [], 0
     for row in terms:
