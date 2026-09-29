@@ -6,8 +6,10 @@
 #
 # requirements-lock.txt holds the full transitive freeze of the same environment.
 
-torch==2.14.0+cpu
-torchvision==0.29.0+cpu
+torch==2.14.0+cpu ; sys_platform != "darwin"
+torch==2.14.0 ; sys_platform == "darwin"   # macOS has no +cpu build
+torchvision==0.29.0+cpu ; sys_platform != "darwin"
+torchvision==0.29.0 ; sys_platform == "darwin"   # macOS has no +cpu build
 
 captum==0.9.0          # Integrated Gradients, Grad-CAM (LayerGradCam)
 lime==0.2.0.1          # LIME image explainer

@@ -37,10 +37,24 @@ rendered.
 
 - **Scope:** one network, one seed, 44 images from Wikimedia Commons. Intervals
   are 95% bootstrap intervals over images.
-- **Checked:** the accuracy of Integrated Gradients' integral; LIME at three
-  segment sizes, with the prediction committed *before* the run (half
-  confirmed); and a full reproduction from a fresh clone, where 43 of 44 image
-  rows matched exactly.
+- **A prediction that half came true.** If resolution drives the disagreement,
+  then coarser LIME segments should agree more with Grad-CAM and finer ones
+  less. That prediction was committed to this repository *before* the run.
+  Finer segments did lower agreement; coarser ones did not raise it. The result
+  is consistent with the main finding but does not independently confirm it —
+  the drop with finer segments also has a mundane cause, fewer samples behind
+  each segment. The prediction was on record first, so it could fail, and half
+  of it did.
+- **Reproduced from a fresh clone.** 43 of 44 image rows matched in every
+  number. The 44th, `school_bus_04`, had been re-encoded by Wikimedia in the
+  meantime: its Spearman values moved by at most 0.012, but one LIME segment
+  landed on the top-10% threshold and its Grad-CAM vs LIME IoU fell from 0.48
+  to 0.21. Every conclusion held. `download_images.py` now flags any image
+  whose pixels have changed.
+- **Also checked:** Integrated Gradients' integral is accurate to within 5% on
+  every image at the step count used.
+- **Nine claims I wrote down, checked, and had to revise** — see
+  [docs/DETAILS.md](docs/DETAILS.md#claims-revised-along-the-way).
 - **Not shown:** that any method is *right* about the network — agreement is not
   faithfulness. The full list is in [LIMITATIONS.md](LIMITATIONS.md).
 
@@ -52,11 +66,17 @@ Every result, method, parameter choice and robustness check is in
 Python 3.12, CPU only, about 15 minutes for the main experiment.
 
 ```bash
-python -m venv .venv
-.venv/Scripts/pip install -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cpu
-.venv/Scripts/python src/download_images.py   # the 60 pinned images, pixel-verified
-.venv/Scripts/python src/classify.py
+python3.12 -m venv .venv          # Windows: py -3.12 -m venv .venv
+source .venv/bin/activate         # Windows: .venv\Scripts\activate
+pip install -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cpu
+python src/download_images.py     # the 60 pinned images, pixel-verified
+python src/classify.py
 ```
+
+Run end to end on Windows 11. On Linux x86-64 and Apple-silicon Macs every
+pinned package installs, but the pipeline has not been run there, and numbers
+may differ in the last decimals. Intel Macs are not supported: the pinned
+PyTorch has no Intel macOS build.
 
 `results/` already contains this study's outputs, so the long scripts skip work
 that is done. The full pipeline and how to recompute from scratch are in

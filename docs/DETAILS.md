@@ -11,6 +11,7 @@ the robustness checks, and how to reproduce everything. What the study does
 - [Measuring agreement](#measuring-agreement)
 - [Choices that change the numbers](#choices-that-change-the-numbers)
 - [Robustness checks](#robustness-checks)
+- [Claims revised along the way](#claims-revised-along-the-way)
 - [Reproducing](#reproducing)
 - [Repository layout](#repository-layout)
 
@@ -166,10 +167,15 @@ and listed in [LIMITATIONS.md](../LIMITATIONS.md):
   5 % on 12 images. The headline number does not move: Grad-CAM vs coarsened IG
   is 0.4709 / 0.4708 / 0.4705 at 32 / 64 / 128 steps.
   `src/check_ig_steps.py` → `results/ig_steps_check.csv`.
-- **LIME segment size — a prediction, half confirmed.** Before the run
-  (commit `8b8f34f`) the resolution account predicted that Grad-CAM vs LIME
-  agreement would order 40 > 80 > 160 segments. SLIC produced 24, 56 and 107
-  segments on average.
+- **LIME segment size — a prediction committed before the run.** If resolution
+  drives the disagreement, coarser LIME should agree more with Grad-CAM and
+  finer LIME less: 40 > 80 > 160 segments. That prediction, together with a
+  confound it might suffer from, was committed in `8b8f34f` and pushed before
+  anything was computed. **Finer segments lowered agreement, as predicted.
+  Coarser segments did not raise it, which was not predicted.** The outcome is
+  consistent with the resolution account but does not independently confirm
+  it, for the reason given below. SLIC produced 24, 56 and 107 segments on
+  average.
 
   | Segments requested | Spearman | IoU above chance |
   |---|---|---|
@@ -198,10 +204,39 @@ and listed in [LIMITATIONS.md](../LIMITATIONS.md):
   before any method runs, so all maps describe the crop, not the photograph.
   A watermark on one image turned out to lie entirely outside the crop.
 
+## Claims revised along the way
+
+Each of these was written down during the project, then checked, and turned out
+to be wrong or overstated. They are listed because the checking is part of the
+method.
+
+| Claim as first written | What checking showed |
+|---|---|
+| Without input normalisation, the network's confidence just drops a little | Predictions change outright: a banana becomes a green mamba, a pizza a trifle |
+| The confidence filter will remove a museum statuette of Bastet found under "Egyptian cat" | It passed as `pedestal` at 95%. The filter removes uncertain images, not wrong ones |
+| The network is confidently wrong on the "Siberian husky" photographs | They are sled races; `dogsled` is correct |
+| Heatmaps in the `inferno` colour scale turn to mush when printed in greyscale | `inferno` has monotonic lightness and prints correctly; rainbow scales are the ones that fail |
+| Chance IoU is 0.053 for every pair of methods | It depends on both mask sizes; LIME's larger masks lift it to about 0.067 |
+| A watermark on one image may attract attribution | It lies outside the centre crop; the network never sees it |
+| The black IG baseline explains the worst outlier, `zebra_03` | With a grey baseline the correlation is still −0.44 |
+| Integrated Gradients is close to unrelated to the other two methods | Its agreement is weak but reliably above zero |
+| The two metrics contradict each other across confidence strata | With intervals, it is one marginal effect and one null |
+
 ## Reproducing
 
 Python 3.12, CPU only. Randomness is pinned to one seed; two LIME runs with the
 same seed are bit-identical.
+
+| Platform | Status |
+|---|---|
+| Windows 11, x86-64 | run end to end, and reproduced from a fresh clone |
+| Linux, x86-64 | every pinned package has a wheel; pipeline not run |
+| macOS, Apple silicon | every pinned package has a wheel; pipeline not run |
+| macOS, Intel | not supported — the pinned PyTorch 2.14 has no Intel macOS build |
+
+Bit-identical results are verified on Windows only. On macOS PyTorch installs
+as its standard build rather than `+cpu` and computes on a different processor,
+so numbers may differ in the last decimals.
 
 Two things to know first:
 
@@ -215,19 +250,24 @@ Two things to know first:
   recompute them, then compare.
 
 ```bash
-python -m venv .venv
-.venv/Scripts/pip install -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cpu
+python3.12 -m venv .venv          # Windows: py -3.12 -m venv .venv
+source .venv/bin/activate         # Windows: .venv\Scripts\activate
+pip install -r requirements-lock.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
-.venv/Scripts/python src/download_images.py      # fetch the 60 pinned images (resumable)
-.venv/Scripts/python src/classify.py             # predictions and strata
-.venv/Scripts/python src/run_experiment.py       # three maps per image (~15 min, resumable)
-.venv/Scripts/python src/summarise.py            # results/summary.csv
-.venv/Scripts/python src/resolution_control.py   # the coarsening test and its control (~3 min)
-.venv/Scripts/python src/bootstrap.py            # 95% confidence intervals
-.venv/Scripts/python src/figures.py              # figures, both languages
-.venv/Scripts/python src/check_ig_steps.py       # IG step-count robustness (~7 min)
-.venv/Scripts/python src/check_lime_segments.py  # LIME at 40 / 80 / 160 segments (~40 min)
+python src/download_images.py      # fetch the 60 pinned images (resumable)
+python src/classify.py             # predictions and strata
+python src/run_experiment.py       # three maps per image (~15 min, resumable)
+python src/summarise.py            # results/summary.csv
+python src/resolution_control.py   # the coarsening test and its control (~3 min)
+python src/bootstrap.py            # 95% confidence intervals
+python src/figures.py              # figures, both languages
+python src/check_ig_steps.py       # IG step-count robustness (~7 min)
+python src/check_lime_segments.py  # LIME at 40 / 80 / 160 segments (~40 min)
 ```
+
+The requirement files select the PyTorch build per platform with environment
+markers: `+cpu` wheels on Windows and Linux, the standard build on macOS, which
+has no `+cpu` variant.
 
 `requirements-lock.txt` is the full freeze of the environment the numbers were
 produced in. `requirements.txt` pins direct dependencies only, so pip resolves
